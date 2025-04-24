@@ -1,0 +1,21 @@
+# Blueprint for new Rust projects
+# Author: Christi Mahu – https://christimahu.dev
+# Part of the dev repo: https://github.com/christimahu/dev/
+# This file is part of a minimal idiomatic Rust blueprint for creating new applications.
+
+[package]
+name = "chatbot"
+version = "0.1.0"
+edition = "2021"
+authors = ["Christi Mahu"]
+description = "A minimal chatbot CLI app used as a blueprint for new Rust projects."
+license = "GPL-3.0-or-later"
+homepage = "https://christimahu.dev"
+repository = "https://github.com/christimahu/dev"
+
+[features]
+default = []
+
+# Optional dependencies can be added here as the project grows
+# [dependencies]
+# clap = { version = "4.4", optional = true }

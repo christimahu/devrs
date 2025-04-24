@@ -1,0 +1,105 @@
+# This file serves as a template and documentation for configuring DevRS.
+#
+# How Configuration Works:
+# 1. User Config: DevRS first looks for `~/.config/devrs/config.toml`.
+#    `devrs setup` creates this file by copying this example if it doesn't exist.
+#    This is where you set your personal defaults.
+# 2. Project Config: DevRS then looks for `.devrs.toml` in the current directory
+#    and its parent directories. Settings in this file override the user config
+#    for that specific project.
+#
+# Use this file as a reference when editing your user or project config files.
+
+# --- Core Development Environment Settings ---
+# Configuration for the main container managed by `devrs env ...` commands.
+[core_env]
+
+# List of directories to mount from the host into the container.
+# Use '~' for your home directory (it will be expanded by DevRS).
+# Required fields: 'host', 'container'.
+# Optional field: 'readonly' (defaults to false).
+# These defaults assume you keep projects in ~/code and tools (like devrs source) in ~/tools.
+mounts = [
+  # Default: Mount project code directory (read-write typical)
+  { host = "~/code", container = "/home/me/code", readonly = false },
+
+  # Default: Mount tools directory (read-write, includes devrs source if cloned to ~/tools/devrs)
+  # This allows accessing/editing devrs source from within the container at /home/me/tools/devrs.
+  { host = "~/tools", container = "/home/me/tools", readonly = false },
+
+  # Default: Mount SSH keys securely (read-only is highly recommended)
+  # Necessary for Git operations over SSH from within the container.
+  { host = "~/.ssh", container = "/home/me/.ssh", readonly = true },
+
+  # Default: Mount Git configuration securely (read-only is highly recommended)
+  # Ensures your Git user name/email are available in the container.
+  { host = "~/.gitconfig", container = "/home/me/.gitconfig", readonly = true },
+
+  # --- Optional Mount Examples (Uncomment and adjust as needed) ---
+  # Example: Mount Cargo registry cache (speeds up Rust builds inside container)
+  # { host = "~/.cargo/registry", container = "/home/me/.cargo/registry", readonly = false },
+  # Example: Mount Cargo git cache (speeds up Rust builds using git dependencies)
+  # { host = "~/.cargo/git", container = "/home/me/.cargo/git", readonly = false },
+  # Example: Mount local Maven repository for Java development
+  # { host = "~/.m2", container = "/home/me/.m2", readonly = false },
+  # Example: Mount specific project outside ~/code
+  # { host = "/Volumes/WorkSSD/my_other_project", container = "/home/me/other_project", readonly = false },
+]
+
+# List of ports to map from the host machine to the container (HOST:CONTAINER format).
+# Allows accessing services running inside the container (e.g., web servers, databases) from the host.
+ports = [
+  "8080:8080", # Example: Map host port 8080 to container port 8080
+  "5173:5173", # Example: Default ViteJS port for web development
+  # Add other ports like "5432:5432" for PostgreSQL if needed
+]
+
+# Environment variables to set inside the core development container.
+# Useful for API keys, configuration flags, proxy settings, etc.
+# Avoid committing secrets directly here; use project-specific .devrs.toml,
+# dedicated secret management tools, or mount specific env files.
+[core_env.env_vars]
+# EXAMPLE_VAR = "example_value"
+# RUST_LOG = "info,devrs=debug" # Example: Set default log level for Rust apps
+# HTTP_PROXY = "http://proxy.example.com:8080" # Example proxy setting
+
+# Default working directory when you enter the container using `devrs env shell`.
+# Should usually be one of the container mount points defined above.
+default_workdir = "/home/me/code" # Sensible default to start in project code
+
+# Name for the core environment Docker image built by `devrs env build`.
+# You can change this if you want multiple differently named core env images.
+image_name = "devrs-core-env"
+# Tag for the core environment Docker image.
+image_tag = "latest"
+
+
+# --- Blueprint System Settings ---
+# Configuration for the project scaffolding system (`devrs blueprint ...`).
+[blueprints]
+
+# Directory on the HOST where DevRS should look for blueprint templates.
+# This should point to the 'blueprints' dir within your cloned DevRS repository.
+# Use '~' for home directory. This path is read by `devrs blueprint` commands running on the host.
+directory = "~/tools/devrs/blueprints"
+
+
+# --- Application Container Defaults (Optional) ---
+# Default settings applied when using `devrs container ...` commands,
+# unless overridden by command-line arguments for those commands.
+[application_defaults]
+
+# Optional prefix to use when automatically generating image tags
+# for `devrs container build` if no --tag is provided.
+# Example: If prefix is "myapp" and current dir is "backend", default tag might be "myapp-backend:latest".
+# default_image_prefix = "myapp"
+
+# Optional default ports to map for `devrs container run` if no --port flags are given.
+# default_ports = ["80:80"]
+
+
+# --- Add other top-level configuration sections as needed ---
+# Example: Maybe settings specific to the 'srv' command in the future
+# [srv]
+# default_port = 9000
+

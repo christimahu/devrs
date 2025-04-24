@@ -1,0 +1,108 @@
+/* Main CSS for Dev Environment Website */
+
+/* Background pattern */
+.bg-pattern {
+  background-color: #0f172a;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2338BDF8' fill-opacity='0.05'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Text gradient for headings */
+.text-gradient {
+  background-image: linear-gradient(to right, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card styling */
+.bg-slate-800 {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bg-slate-800:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* Table styles */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+th {
+  font-weight: 600;
+  text-align: left;
+}
+
+td, th {
+  padding: 0.75rem 1rem;
+}
+
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Code block styling */
+pre[class*="language-"] {
+  border-radius: 0.375rem;
+  margin: 0;
+}
+
+code[class*="language-"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+/* Button styling */
+button {
+  transition: all 0.2s ease;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* Footer styling */
+footer {
+  margin-top: auto;
+}
+
+/* Link hover effects */
+a:not(.text-gradient) {
+  transition: color 0.2s ease;
+}
+
+/* Accessibility improvements */
+:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Fix for Safari flexbox issues */
+@supports (-webkit-touch-callout: none) {
+  .flex-col {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .flex-grow {
+    flex: 1 0 auto;
+  }
+}
+
+/* Apply smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improve contrast for better accessibility */
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-300 {
+  color: #d1d5db;
+}

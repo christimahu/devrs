@@ -1,0 +1,204 @@
+#!/bin/bash
+# vim: ft=sh
+
+# ============================================================ #
+# Shared Shell Functions and Aliases for DevRS Environment     #
+# ============================================================ #
+# This file is sourced by ~/.bashrc or ~/.zshrc on the host
+# and inside the container to provide common utility functions.
+
+# --- General Utilities ---
+
+# Pretty tree view (if 'tree' command is installed)
+# Usage: tree_ls [directory] [depth]
+tree_ls() {
+  if command -v tree &> /dev/null; then
+    local depth_arg=""
+    if [ -n "$2" ]; then
+      depth_arg="-L $2"
+    fi
+    tree -aC $depth_arg --dirsfirst "${1:-.}" | less -R
+  else
+    echo "'tree' command not found. Using 'ls' instead."
+    ls -la "${1:-.}"
+  fi
+}
+alias tree='tree_ls'
+
+# Git branch cleanup: delete merged local branches except main/master/dev
+ghprune() {
+    # Fetch latest changes and prune remote-tracking branches
+    git fetch --prune
+    # Get default branch name (handles main/master)
+    local default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+    # Checkout default branch and pull latest changes
+    git checkout $default_branch && git pull origin $default_branch
+    # Delete local branches that have been merged into the default branch
+    git branch --merged $default_branch | grep -v "\* $default_branch" | grep -v "develop" | xargs -n 1 git branch -d
+    echo "Local merged branches pruned (except $default_branch and develop)."
+}
+
+# Archive helpers
+tarfolder() { tar -czvf "${1}.tar.gz" "${1}" ; }
+untarfolder() { tar -xzvf "${1}" ; }
+
+# Quick navigation aliases
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias ls='ls --color=auto -F'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Make grep colorful
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Confirm before overwriting or removing
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+
+# Search command history
+alias hist='history | grep'
+
+# --- Cloud SDK Helpers ---
+
+# --- GCP ---
+# Login to gcloud (uses web-based flow)
+glogin() {
+    gcloud auth login --no-launch-browser
+    gcloud auth application-default login --no-launch-browser
+}
+
+# List available gcloud configurations
+gconflist() {
+    gcloud config configurations list
+}
+
+# Activate a specific gcloud configuration
+gconfactivate() {
+    if [ -z "$1" ]; then
+        echo "Usage: gconfactivate <configuration_name>"
+        gconflist
+        return 1
+    fi
+    gcloud config configurations activate "$1"
+}
+
+# Show current gcloud configuration
+gconfshow() {
+    gcloud config list
+}
+
+# Set current GCP project
+gproject() {
+    if [ -z "$1" ]; then
+        echo "Usage: gproject <project_id>"
+        echo "Current project: $(gcloud config get-value project)"
+        gcloud projects list --sort-by=projectId
+        return 1
+    fi
+    gcloud config set project "$1"
+}
+
+# List GCS buckets
+gslist() {
+    gsutil ls
+}
+
+# Upload file/dir to GCS
+# Usage: gsup <local_path> <gs://bucket/path>
+gsup() {
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Usage: gsup <local_path> <gs://bucket[/path]>"
+        return 1
+    fi
+    gsutil -m cp -r "$1" "$2"
+}
+
+# Download file/dir from GCS
+# Usage: gsdown <gs://bucket/path> <local_path>
+gsdown() {
+     if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Usage: gsdown <gs://bucket/path> <local_path>"
+        return 1
+    fi
+    gsutil -m cp -r "$1" "$2"
+}
+
+# --- Azure ---
+# Login to Azure CLI (uses device code flow)
+azlogin() {
+    az login --use-device-code
+}
+
+# Show current Azure account/subscription details
+azacc() {
+    az account show -o table
+}
+
+# Set the active Azure subscription
+# Usage: azsetsub <subscription_id_or_name>
+azsetsub() {
+    if [ -z "$1" ]; then
+        echo "Usage: azsetsub <subscription_id_or_name>"
+        echo "Available subscriptions:"
+        az account list -o table
+        return 1
+    fi
+    az account set --subscription "$1"
+}
+
+# List Azure resource groups
+azrglist() {
+    az group list -o table
+}
+
+# List Azure VMs in the current subscription
+azvmlist() {
+    az vm list -o table
+}
+
+# List Azure Storage accounts
+azstorlist() {
+    az storage account list -o table
+}
+
+# --- Other Aliases ---
+
+# Alias for Neovim
+alias vim='nvim'
+alias vi='nvim'
+
+# Alias for Python3
+alias python='python3'
+alias pip='pip3'
+
+# Clear terminal screen
+alias cls='clear'
+
+# Get public IP
+alias pubip="curl -s ifconfig.me"
+
+# Make sure PATH includes local user bin and cargo bin
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+# Add Go path (if Go installed)
+if [ -d "/usr/local/go/bin" ]; then
+    export PATH="/usr/local/go/bin:$PATH"
+fi
+if [ -d "$HOME/go/bin" ]; then
+    export PATH="$HOME/go/bin:$PATH"
+fi
+
+
+# --- Prompt Customization (Optional Example) ---
+# Simple prompt showing user, host, and current directory
+# PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+echo "DevRS Shell Functions Loaded."
+
+

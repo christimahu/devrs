@@ -1,0 +1,39 @@
+name: Run Tests
+
+on:
+  # Run on pushes to the main branch
+  push:
+    branches: [ "main" ]
+  # Run on pull requests targeting the main branch
+  pull_request:
+    branches: [ "main" ]
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Cargo Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable # Uses the stable Rust toolchain
+        with:
+          components: clippy # Optionally install clippy
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2 # Cache cargo registry, index, build outputs
+
+      - name: Run tests
+        # Use --workspace because you have multiple crates (e.g., cli)
+        run: cargo test --workspace --all-targets
+
+      # Optional: Add linting check
+      - name: Run Linter (Clippy)
+        run: cargo clippy --workspace -- -D warnings
+
+      # Optional: Add formatting check
+      - name: Check Formatting (fmt)
+        run: cargo fmt --all --check

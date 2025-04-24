@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevRS :: Christi Mahu</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/matrix.css">
+
+  <script src="js/main.js" defer></script>
+</head>
+<body class="matrix-body">
+  <!-- Matrix digital rain background and CRT effect overlay -->
+  <div class="matrix-bg"></div>
+  <div class="crt-effect"></div>
+
+  <div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-header border-b border-matrix-dim sticky top-0 z-50 shadow-matrix">
+      <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-matrix-btn rounded-xl flex items-center justify-center text-matrix-dark mr-3 shadow-matrix">
+            <i class="fas fa-cube text-xl"></i>
+          </div>
+          <a href="https://christimahu.dev" class="text-matrix-green hover:text-matrix-bright">
+            <span class="text-lg font-semibold">DevRS</span>
+          </a>
+        </div>
+        
+        <!-- Navbar content (from footer) -->
+        <div class="flex items-center space-x-8">
+          <a href="https://github.com/christimahu/devrs" target="_blank" class="text-matrix-dim hover:text-matrix-green flex items-center transition">
+            <i class="fab fa-github mr-2"></i> GitHub
+          </a>
+          <div class="text-matrix-dim">
+            Created by <a href="https://christimahu.com/software" target="_blank" class="text-matrix-green hover:text-matrix-bright">Christi Mahu</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+      <!-- Hero Section -->
+      <section class="py-16 md:py-24 px-6 text-center relative overflow-hidden">
+        <div class="absolute inset-0 z-0 opacity-20">
+          <div class="absolute top-20 left-1/4 w-72 h-72 bg-matrix-green rounded-full filter blur-3xl pulse-glow"></div>
+          <div class="absolute bottom-20 right-1/4 w-96 h-96 bg-matrix-green rounded-full filter blur-3xl pulse-glow"></div>
+        </div>
+
+        <div class="relative z-10 max-w-3xl mx-auto">
+          <h2 class="text-4xl md:text-6xl mb-4 text-gradient">DevRS</h2>
+          <div class="w-full h-1 bg-matrix-green mb-8 shadow-matrix"></div>
+          <p class="text-lg md:text-xl text-matrix-dim mb-6 leading-relaxed">
+            <p>DevRS provides a unified, cross-platform development environment focused on consistent, reproducible workflows powered by Docker, written entirely in Rust.</p>
+            <p>A seamless, cross-platform development environment that keeps your host system clean while providing a complete suite of development tools that follow you across all your machines.</p>
+          </p>
+          <div class="flex flex-wrap justify-center gap-4 mt-8 mb-2">
+            <a href="https://github.com/christimahu/devrs" target="_blank" class="px-6 py-3 bg-transparent border border-matrix-dim hover:border-matrix-green text-matrix-green font-medium rounded-lg shadow-matrix transition flex items-center">
+              <i class="fab fa-github mr-2"></i> View on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Overview Section -->
+      <section id="overview" class="tab-content container mx-auto px-4 py-10">
+        <div class="max-w-3xl mx-auto space-y-12">
+          <div>
+            <h3 class="text-2xl font-semibold mb-6 text-gradient">Why Use a Development Container?</h3>
+            <p class="text-matrix-dim mb-6 leading-relaxed">
+              Development environments can be complex to set up and maintain. Language versions, 
+              dependencies, and tools can conflict between projects. DevRS solves this
+              by providing a consistent, reproducible workspace that runs identically everywhere.
+            </p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-card p-6 rounded-xl shadow-matrix">
+              <div class="w-12 h-12 bg-matrix-btn-dim rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-rocket text-matrix-green text-xl"></i>
+              </div>
+              <h3 class="text-xl font-semibold mb-2 text-matrix-green">Instant Setup</h3>
+              <p class="text-matrix-dim">Get a complete development environment within minutes, ready for coding.</p>
+            </div>
+            
+            <div class="bg-card p-6 rounded-xl shadow-matrix">
+              <div class="w-12 h-12 bg-matrix-btn-dim rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-tools text-matrix-green text-xl"></i>
+              </div>
+              <h3 class="text-xl font-semibold mb-2 text-matrix-green">Multi-Language</h3>
+              <p class="text-matrix-dim">C++, Rust, Go, Python, Node.js, and more with all tools pre-configured.</p>
+            </div>
+            
+            <div class="bg-card p-6 rounded-xl shadow-matrix">
+              <div class="w-12 h-12 bg-matrix-btn-dim rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-code-branch text-matrix-green text-xl"></i>
+              </div>
+              <h3 class="text-xl font-semibold mb-2 text-matrix-green">Portable</h3>
+              <p class="text-matrix-dim">Works identically on macOS, Linux, and Windows with the same configuration.</p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-2xl font-semibold mb-6 text-gradient">Included Tools</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+              <a href="https://www.rust-lang.org/" target="_blank" class="p-4 bg-card rounded-lg flex items-center justify-center hover:bg-matrix-btn-dim transition">
+                <div>
+                  <i class="fab fa-rust text-lg text-orange-400 mb-2"></i>
+                  <p>Rust</p>
+                </div>
+              </a>
+              <a href="https://isocpp.org/" target="_blank" class="p-4 bg-card rounded-lg flex items-center justify-center hover:bg-matrix-btn-dim transition">
+                <div>
+                  <i class="fas fa-code text-lg text-blue-400 mb-2"></i>
+                  <p>C/C++</p>
+                </div>
+              </a>
+              <a href="https://www.python.org/" target="_blank" class="p-4 bg-card rounded-lg flex items-center justify-center hover:bg-matrix-btn-dim transition">
+                <div>
+                  <i class="fab fa-python text-lg text-yellow-400 mb-2"></i>
+                  <p>Python</p>
+                </div>
+              </a>
+              <a href="https://golang.org/" target="_blank" class="p-4 bg-card rounded-lg flex items-center justify-center hover:bg-matrix-btn-dim transition">
+                <div>
+                  <i class="fab fa-golang text-lg text-blue-400 mb-2"></i>
+                  <p>Go</p>
+                </div>
+              </a>
+              <a href="https://nodejs.org/" target="_blank" class="p-4 bg-card rounded-lg flex items-center justify-center hover:bg-matrix-btn-dim transition">
+                <div>
+                  <i class="fab fa-node-js text-lg text-green-400 mb-2"></i>
+                  <p>Node.js</p>
+                </div>
+              </a>
+              <a href="https://cloud.google.com/sdk" target="_blank" class="p-4 bg-card rounded-lg flex items-center justify-center hover:bg-matrix-btn-dim transition">
+                <div>
+                  <i class="fab fa-google text-lg text-blue-400 mb-2"></i>
+                  <p>Cloud SDK</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-2xl font-semibold mb-6 text-gradient">Getting Started</h3>
+            <div class="bg-card p-6 rounded-xl shadow-matrix">
+              <ol class="space-y-4 text-matrix-dim">
+                <li class="flex items-start">
+                  <div class="bg-matrix-btn rounded-full w-6 h-6 flex items-center justify-center text-matrix-dark font-bold mt-1 mr-3 shrink-0">1</div>
+                  <div>
+                    <p><strong class="text-matrix-green">Install DevRS:</strong> Clone the repository and install the CLI tool</p>
+                    <div class="code-block p-4 rounded-md mt-2 font-mono text-sm overflow-x-auto">
+                      <code>git clone https://github.com/christimahu/devrs.git ~/tools/devrs<br>cd ~/tools/devrs<br>cargo install --path ./cli</code>
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <div class="bg-matrix-btn rounded-full w-6 h-6 flex items-center justify-center text-matrix-dark font-bold mt-1 mr-3 shrink-0">2</div>
+                  <div>
+                    <p><strong class="text-matrix-green">Configure Your System:</strong> Set up the environment</p>
+                    <div class="code-block p-4 rounded-md mt-2 font-mono text-sm overflow-x-auto">
+                      <code>devrs setup</code>
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <div class="bg-matrix-btn rounded-full w-6 h-6 flex items-center justify-center text-matrix-dark font-bold mt-1 mr-3 shrink-0">3</div>
+                  <div>
+                    <p><strong class="text-matrix-green">Build Your Environment:</strong> Create the Docker container</p>
+                    <div class="code-block p-4 rounded-md mt-2 font-mono text-sm overflow-x-auto">
+                      <code>devrs env build</code>
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <div class="bg-matrix-btn rounded-full w-6 h-6 flex items-center justify-center text-matrix-dark font-bold mt-1 mr-3 shrink-0">4</div>
+                  <div>
+                    <p><strong class="text-matrix-green">Start Using DevRS:</strong> Enter your development environment</p>
+                    <div class="code-block p-4 rounded-md mt-2 font-mono text-sm overflow-x-auto">
+                      <code>cd ~/your-project<br>devrs env shell</code>
+                    </div>
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-header border-t border-matrix-dim py-4 mt-12">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-center items-center">
+          <div class="text-matrix-dim text-sm">
+            © <a href="https://christimahu.dev" target="_blank" class="text-matrix-green hover:text-matrix-bright">Christi Mahu</a> • 
+            <a href="https://github.com/christimahu/devrs/blob/main/LICENSE" target="_blank" class="text-matrix-green hover:text-matrix-bright">MPL 2.0 License</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

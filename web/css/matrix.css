@@ -1,0 +1,431 @@
+/* Matrix-inspired styling */
+:root {
+  --matrix-green: #00ff41;
+  --matrix-bright: #50fa7b;
+  --matrix-dim: #a3ffb0;
+  --matrix-dark: #050805;
+  --matrix-black: #000500;
+  --matrix-header: rgba(0, 10, 0, 0.9);
+  --matrix-glow: 0 0 10px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2);
+  --matrix-btn: #00ff41;
+  --matrix-btn-dim: rgba(0, 255, 65, 0.2);
+}
+
+/* Base styling */
+.matrix-body {
+  font-family: 'Courier Prime', monospace;
+  background-color: var(--matrix-dark);
+  color: var(--matrix-green);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Matrix digital rain effect - complete code blocks */
+.matrix-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.3;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1800" style="background-color:%23000500">
+  <text x="5" y="20" font-family="monospace" font-size="14" fill="%2300ff41">use axum::Router;</text>
+  <text x="5" y="40" font-family="monospace" font-size="14" fill="%2300ff41">use std::{env, fs, net::SocketAddr, path::PathBuf, time::Instant};</text>
+  <text x="5" y="60" font-family="monospace" font-size="14" fill="%2300ff41">use tower_http::{</text>
+  <text x="35" y="80" font-family="monospace" font-size="14" fill="%2300ff41">    cors::CorsLayer,</text>
+  <text x="35" y="100" font-family="monospace" font-size="14" fill="%2300ff41">    services::ServeDir,</text>
+  <text x="35" y="120" font-family="monospace" font-size="14" fill="%2300ff41">    trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer}</text>
+  <text x="5" y="140" font-family="monospace" font-size="14" fill="%2300ff41">};</text>
+  <text x="5" y="160" font-family="monospace" font-size="14" fill="%2300ff41">use tracing::{info, error, warn};</text>
+  <text x="5" y="180" font-family="monospace" font-size="14" fill="%2300ff41">use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};</text>
+
+  <text x="5" y="220" font-family="monospace" font-size="14" fill="%2300ff41">#[tokio::main]</text>
+  <text x="5" y="240" font-family="monospace" font-size="14" fill="%2300ff41">async fn main() {</text>
+  <text x="25" y="260" font-family="monospace" font-size="14" fill="%2300ff41">    // Setup enhanced logging</text>
+  <text x="25" y="280" font-family="monospace" font-size="14" fill="%2300ff41">    setup_logging();</text>
+  <text x="25" y="300" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="320" font-family="monospace" font-size="14" fill="%2300ff41">    // Get command line arguments</text>
+  <text x="25" y="340" font-family="monospace" font-size="14" fill="%2300ff41">    let args: Vec<String> = env::args().collect();</text>
+  <text x="25" y="360" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="380" font-family="monospace" font-size="14" fill="%2300ff41">    // Parse arguments more carefully</text>
+  <text x="25" y="400" font-family="monospace" font-size="14" fill="%2300ff41">    let (port, dir) = parse_arguments(&args);</text>
+  <text x="25" y="420" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="440" font-family="monospace" font-size="14" fill="%2300ff41">    // Convert to absolute path and verify it exists</text>
+  <text x="25" y="460" font-family="monospace" font-size="14" fill="%2300ff41">    let dir_path = PathBuf::from(&dir);</text>
+  <text x="25" y="480" font-family="monospace" font-size="14" fill="%2300ff41">    let abs_path = if dir_path.is_absolute() {</text>
+  <text x="45" y="500" font-family="monospace" font-size="14" fill="%2300ff41">        dir_path.clone()</text>
+  <text x="25" y="520" font-family="monospace" font-size="14" fill="%2300ff41">    } else {</text>
+  <text x="45" y="540" font-family="monospace" font-size="14" fill="%2300ff41">        match std::env::current_dir() {</text>
+  <text x="65" y="560" font-family="monospace" font-size="14" fill="%2300ff41">            Ok(current) => current.join(&dir_path),</text>
+  <text x="65" y="580" font-family="monospace" font-size="14" fill="%2300ff41">            Err(e) => {</text>
+  <text x="85" y="600" font-family="monospace" font-size="14" fill="%2300ff41">                error!("Failed to get current directory: {}", e);</text>
+  <text x="85" y="620" font-family="monospace" font-size="14" fill="%2300ff41">                eprintln!("Error: Failed to get current directory: {}", e);</text>
+  <text x="85" y="640" font-family="monospace" font-size="14" fill="%2300ff41">                std::process::exit(1);</text>
+  <text x="65" y="660" font-family="monospace" font-size="14" fill="%2300ff41">            }</text>
+  <text x="45" y="680" font-family="monospace" font-size="14" fill="%2300ff41">        }</text>
+  <text x="25" y="700" font-family="monospace" font-size="14" fill="%2300ff41">    };</text>
+  <text x="25" y="720" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="740" font-family="monospace" font-size="14" fill="%2300ff41">    // Verify directory exists</text>
+  <text x="25" y="760" font-family="monospace" font-size="14" fill="%2300ff41">    if !abs_path.exists() {</text>
+  <text x="45" y="780" font-family="monospace" font-size="14" fill="%2300ff41">        error!("Directory does not exist: {}", abs_path.display());</text>
+  <text x="45" y="800" font-family="monospace" font-size="14" fill="%2300ff41">        eprintln!("Error: Directory does not exist: {}", abs_path.display());</text>
+  <text x="45" y="820" font-family="monospace" font-size="14" fill="%2300ff41">        std::process::exit(1);</text>
+  <text x="25" y="840" font-family="monospace" font-size="14" fill="%2300ff41">    }</text>
+  <text x="25" y="860" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+
+  <text x="600" y="40" font-family="monospace" font-size="14" fill="%2300ff41">fn parse_arguments(args: &[String]) -> (u16, String) {</text>
+  <text x="620" y="60" font-family="monospace" font-size="14" fill="%2300ff41">    let mut port = 3000; // Default port</text>
+  <text x="620" y="80" font-family="monospace" font-size="14" fill="%2300ff41">    let mut dir = String::from(".");</text>
+  <text x="620" y="100" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="120" font-family="monospace" font-size="14" fill="%2300ff41">    if args.len() > 1 {</text>
+  <text x="640" y="140" font-family="monospace" font-size="14" fill="%2300ff41">        // If at least one arg, treat as port</text>
+  <text x="640" y="160" font-family="monospace" font-size="14" fill="%2300ff41">        port = match args[1].parse() {</text>
+  <text x="660" y="180" font-family="monospace" font-size="14" fill="%2300ff41">            Ok(p) => p,</text>
+  <text x="660" y="200" font-family="monospace" font-size="14" fill="%2300ff41">            Err(_) => {</text>
+  <text x="680" y="220" font-family="monospace" font-size="14" fill="%2300ff41">                eprintln!("Warning: Invalid port number '{}', using default", args[1]);</text>
+  <text x="680" y="240" font-family="monospace" font-size="14" fill="%2300ff41">                port</text>
+  <text x="660" y="260" font-family="monospace" font-size="14" fill="%2300ff41">            }</text>
+  <text x="640" y="280" font-family="monospace" font-size="14" fill="%2300ff41">        };</text>
+  <text x="620" y="300" font-family="monospace" font-size="14" fill="%2300ff41">    }</text>
+  <text x="620" y="320" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="340" font-family="monospace" font-size="14" fill="%2300ff41">    if args.len() > 2 {</text>
+  <text x="640" y="360" font-family="monospace" font-size="14" fill="%2300ff41">        // If at least two args, second is directory</text>
+  <text x="640" y="380" font-family="monospace" font-size="14" fill="%2300ff41">        dir = args[2].clone();</text>
+  <text x="620" y="400" font-family="monospace" font-size="14" fill="%2300ff41">    }</text>
+  <text x="620" y="420" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="440" font-family="monospace" font-size="14" fill="%2300ff41">    (port, dir)</text>
+  <text x="600" y="460" font-family="monospace" font-size="14" fill="%2300ff41">}</text>
+
+  <text x="600" y="500" font-family="monospace" font-size="14" fill="%2300ff41">fn setup_logging() {</text>
+  <text x="620" y="520" font-family="monospace" font-size="14" fill="%2300ff41">    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {</text>
+  <text x="640" y="540" font-family="monospace" font-size="14" fill="%2300ff41">        // Default to info level for all crates</text>
+  <text x="640" y="560" font-family="monospace" font-size="14" fill="%2300ff41">        EnvFilter::new("info")</text>
+  <text x="620" y="580" font-family="monospace" font-size="14" fill="%2300ff41">    });</text>
+  <text x="620" y="600" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="620" font-family="monospace" font-size="14" fill="%2300ff41">    tracing_subscriber::registry()</text>
+  <text x="640" y="640" font-family="monospace" font-size="14" fill="%2300ff41">        .with(env_filter)</text>
+  <text x="640" y="660" font-family="monospace" font-size="14" fill="%2300ff41">        .with(tracing_subscriber::fmt::layer())</text>
+  <text x="640" y="680" font-family="monospace" font-size="14" fill="%2300ff41">        .init();</text>
+  <text x="600" y="700" font-family="monospace" font-size="14" fill="%2300ff41">}</text>
+
+  <text x="25" y="900" font-family="monospace" font-size="14" fill="%2300ff41">    // Build the application with a router</text>
+  <text x="25" y="920" font-family="monospace" font-size="14" fill="%2300ff41">    let app = Router::new()</text>
+  <text x="45" y="940" font-family="monospace" font-size="14" fill="%2300ff41">        .nest_service("/", ServeDir::new(&abs_path))</text>
+  <text x="45" y="960" font-family="monospace" font-size="14" fill="%2300ff41">        .layer(</text>
+  <text x="65" y="980" font-family="monospace" font-size="14" fill="%2300ff41">            TraceLayer::new_for_http()</text>
+  <text x="85" y="1000" font-family="monospace" font-size="14" fill="%2300ff41">                .make_span_with(DefaultMakeSpan::new().include_headers(true))</text>
+  <text x="85" y="1020" font-family="monospace" font-size="14" fill="%2300ff41">                .on_request(DefaultOnRequest::new().level(Level::INFO))</text>
+  <text x="85" y="1040" font-family="monospace" font-size="14" fill="%2300ff41">                .on_response(DefaultOnResponse::new().level(Level::INFO)),</text>
+  <text x="65" y="1060" font-family="monospace" font-size="14" fill="%2300ff41">        )</text>
+  <text x="45" y="1080" font-family="monospace" font-size="14" fill="%2300ff41">        .layer(CorsLayer::permissive());</text>
+  <text x="25" y="1100" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="1120" font-family="monospace" font-size="14" fill="%2300ff41">    // Create socket address</text>
+  <text x="25" y="1140" font-family="monospace" font-size="14" fill="%2300ff41">    let addr = SocketAddr::from(([0, 0, 0, 0], port));</text>
+  <text x="25" y="1160" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="1180" font-family="monospace" font-size="14" fill="%2300ff41">    // Start the server and log info</text>
+  <text x="25" y="1200" font-family="monospace" font-size="14" fill="%2300ff41">    info!("Starting file server at http://localhost:{} for {}", port, abs_path.display());</text>
+  <text x="25" y="1220" font-family="monospace" font-size="14" fill="%2300ff41">    info!("Press Ctrl+C to stop");</text>
+  <text x="25" y="1240" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="25" y="1260" font-family="monospace" font-size="14" fill="%2300ff41">    // Serve with hyper</text>
+  <text x="25" y="1280" font-family="monospace" font-size="14" fill="%2300ff41">    axum::Server::bind(&addr)</text>
+  <text x="45" y="1300" font-family="monospace" font-size="14" fill="%2300ff41">        .serve(app.into_make_service())</text>
+  <text x="45" y="1320" font-family="monospace" font-size="14" fill="%2300ff41">        .with_graceful_shutdown(shutdown_signal())</text>
+  <text x="45" y="1340" font-family="monospace" font-size="14" fill="%2300ff41">        .await</text>
+  <text x="45" y="1360" font-family="monospace" font-size="14" fill="%2300ff41">        .unwrap();</text>
+  <text x="5" y="1380" font-family="monospace" font-size="14" fill="%2300ff41">}</text>
+
+  <text x="600" y="740" font-family="monospace" font-size="14" fill="%2300ff41">async fn shutdown_signal() {</text>
+  <text x="620" y="760" font-family="monospace" font-size="14" fill="%2300ff41">    let ctrl_c = async {</text>
+  <text x="640" y="780" font-family="monospace" font-size="14" fill="%2300ff41">        tokio::signal::ctrl_c()</text>
+  <text x="660" y="800" font-family="monospace" font-size="14" fill="%2300ff41">            .await</text>
+  <text x="660" y="820" font-family="monospace" font-size="14" fill="%2300ff41">            .expect("Failed to install Ctrl+C handler");</text>
+  <text x="620" y="840" font-family="monospace" font-size="14" fill="%2300ff41">    };</text>
+  <text x="620" y="860" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="880" font-family="monospace" font-size="14" fill="%2300ff41">    #[cfg(unix)]</text>
+  <text x="620" y="900" font-family="monospace" font-size="14" fill="%2300ff41">    let terminate = async {</text>
+  <text x="640" y="920" font-family="monospace" font-size="14" fill="%2300ff41">        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())</text>
+  <text x="660" y="940" font-family="monospace" font-size="14" fill="%2300ff41">            .expect("Failed to install SIGTERM handler")</text>
+  <text x="660" y="960" font-family="monospace" font-size="14" fill="%2300ff41">            .recv()</text>
+  <text x="660" y="980" font-family="monospace" font-size="14" fill="%2300ff41">            .await;</text>
+  <text x="620" y="1000" font-family="monospace" font-size="14" fill="%2300ff41">    };</text>
+  <text x="620" y="1020" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="1040" font-family="monospace" font-size="14" fill="%2300ff41">    #[cfg(not(unix))]</text>
+  <text x="620" y="1060" font-family="monospace" font-size="14" fill="%2300ff41">    let terminate = std::future::pending::<()>();</text>
+  <text x="620" y="1080" font-family="monospace" font-size="14" fill="%2300ff41"></text>
+  <text x="620" y="1100" font-family="monospace" font-size="14" fill="%2300ff41">    tokio::select! {</text>
+  <text x="640" y="1120" font-family="monospace" font-size="14" fill="%2300ff41">        _ = ctrl_c => {</text>
+  <text x="660" y="1140" font-family="monospace" font-size="14" fill="%2300ff41">            info!("Received Ctrl+C, shutting down...");</text>
+  <text x="640" y="1160" font-family="monospace" font-size="14" fill="%2300ff41">        },</text>
+  <text x="640" y="1180" font-family="monospace" font-size="14" fill="%2300ff41">        _ = terminate => {</text>
+  <text x="660" y="1200" font-family="monospace" font-size="14" fill="%2300ff41">            info!("Received SIGTERM, shutting down...");</text>
+  <text x="640" y="1220" font-family="monospace" font-size="14" fill="%2300ff41">        },</text>
+  <text x="620" y="1240" font-family="monospace" font-size="14" fill="%2300ff41">    }</text>
+  <text x="600" y="1260" font-family="monospace" font-size="14" fill="%2300ff41">}</text>
+  </svg>');
+  animation: scrollDown 150s linear infinite;
+}
+
+@keyframes scrollDown {
+  from { background-position: 0 0; }
+  to { background-position: 0 1000px; }
+}
+
+/* CRT effect */
+.crt-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  opacity: 0.15;
+}
+
+.crt-effect::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 30, 0, 0.1);
+  z-index: 1000;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Text gradient for headings */
+.text-gradient {
+  color: var(--matrix-green);
+  text-shadow: var(--matrix-glow);
+}
+
+/* Background styles */
+.bg-header {
+  background-color: var(--matrix-header);
+  backdrop-filter: blur(4px);
+}
+
+.bg-card {
+  background-color: rgba(0, 20, 0, 0.6);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.1);
+  transition: all 0.3s ease;
+}
+
+.bg-card:hover {
+  box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.3), var(--matrix-glow);
+  transform: translateY(-2px);
+}
+
+.bg-matrix-dark {
+  background-color: var(--matrix-dark);
+}
+
+.bg-matrix-btn {
+  background-color: var(--matrix-btn);
+}
+
+.bg-matrix-btn-dim {
+  background-color: var(--matrix-btn-dim);
+}
+
+/* Text colors */
+.text-matrix-green {
+  color: var(--matrix-green);
+}
+
+.text-matrix-bright {
+  color: var(--matrix-bright);
+}
+
+.text-matrix-dim {
+  color: var(--matrix-dim);
+}
+
+.text-matrix-dark {
+  color: var(--matrix-dark);
+}
+
+/* Shadow effects */
+.shadow-matrix {
+  box-shadow: 0 4px 10px rgba(0, 255, 65, 0.1);
+}
+
+.shadow-text {
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.7);
+}
+
+/* Button styling */
+.btn-matrix {
+  background-color: var(--matrix-btn-dim);
+  color: var(--matrix-green);
+  border: 1px solid var(--matrix-green);
+  transition: all 0.2s ease;
+}
+
+.btn-matrix:hover {
+  background-color: var(--matrix-green);
+  color: var(--matrix-dark);
+  box-shadow: var(--matrix-glow);
+}
+
+/* Navigation styling */
+.nav-link {
+  color: var(--matrix-green);
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  text-shadow: var(--matrix-glow);
+}
+
+/* Code blocks */
+.code-block {
+  background-color: var(--matrix-black);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  font-family: 'VT323', monospace;
+  box-shadow: inset 0 0 5px rgba(0, 255, 65, 0.2);
+  color: var(--matrix-green);
+}
+
+/* Table styling */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table td, table th {
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+table tr:hover {
+  background-color: rgba(0, 255, 65, 0.1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--matrix-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.2);
+  border: 1px solid var(--matrix-green);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--matrix-green);
+}
+
+/* Flicker animation */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  8%, 10% { opacity: 0.8; }
+  20%, 25% { opacity: 0.9; }
+  30%, 35% { opacity: 0.7; }
+  40% { opacity: 0.8; }
+}
+
+.flicker {
+  animation: flicker 10s infinite linear;
+}
+
+/* Pulse glow animation */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+.pulse-glow {
+  animation: pulse-glow 4s infinite ease-in-out;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .text-gradient {
+    font-size: 90%;
+  }
+
+  .code-block {
+    font-size: 80%;
+  }
+
+  table td, table th {
+    padding: 0.5rem;
+  }
+}
+
+/* Typewriter effect */
+.typewriter {
+  overflow: hidden;
+  border-right: 0.15em solid var(--matrix-green);
+  white-space: nowrap;
+  margin: 0 auto;
+  animation:
+    typing 3.5s steps(40, end),
+    blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--matrix-green); }
+}
+
+/* Fix for Safari flexbox issues */
+@supports (-webkit-touch-callout: none) {
+  .flex-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .flex-grow {
+    flex: 1 0 auto;
+  }
+}
+
+/* Improve contrast for better accessibility */
+a {
+  text-decoration: none;
+  color: var(--matrix-green);
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-shadow: var(--matrix-glow);
+}
+
+/* Loading blinking cursor */
+.blinking-cursor {
+  border-right: 2px solid var(--matrix-green);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 49% { border-color: var(--matrix-green); }
+  50%, 100% { border-color: transparent; }
+}
+
+/* Cursor styles */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Add hidden class for Alpine.js */
+[x-cloak] { display: none !important; }
+
+.tab-content.hidden {
+  display: none;
+}
