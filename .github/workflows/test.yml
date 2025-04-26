@@ -32,7 +32,7 @@ jobs:
         run: |
           sudo apt-get update -y
           # Remove conflicting package if present
-          sudo apt-get remove -y containerd
+          sudo apt-get remove -y containerd containerd.io || true
           # Install required packages
           sudo apt-get install -y git neovim docker.io
 
