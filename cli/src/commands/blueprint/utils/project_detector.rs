@@ -325,40 +325,41 @@ fn check_python(path: &Path) -> Option<ProjectInfo> {
 ///   if a known extension is found, otherwise `None`.
 fn check_extensions(path: &Path) -> Option<String> {
     let entries = match fs::read_dir(path) {
-         Ok(iter) => iter,
-         Err(e) => {
-             debug!(
-                 "Could not read directory {} for extension check: {}",
-                 path.display(),
-                 e
-             );
-             return None;
-         }
-     };
+        Ok(iter) => iter,
+        Err(e) => {
+            debug!(
+                "Could not read directory {} for extension check: {}",
+                path.display(),
+                e
+            );
+            return None;
+        }
+    };
 
-     // Iterate through *flattened* directory entries (skips Err, unwraps Ok)
-     for entry in entries.flatten() { // <-- Added .flatten() here
-         // Get the file extension as a string slice, if possible
-         if let Some(ext) = entry.path().extension().and_then(|os| os.to_str()) {
-             // Match against known common extensions
-             // ... (rest of the code, now unindented once)
-             match ext {
-                 "rs" => return Some("Rust".to_string()),
-                 "go" => return Some("Go".to_string()),
-                 "py" => return Some("Python".to_string()),
-                 "js" | "mjs" | "cjs" => return Some("JavaScript".to_string()),
-                 "ts" | "tsx" => return Some("TypeScript".to_string()),
-                 "java" => return Some("Java".to_string()),
-                 "kt" | "kts" => return Some("Kotlin".to_string()),
-                 "c" | "h" => return Some("C".to_string()),
-                 "cpp" | "hpp" | "cxx" | "hxx" => return Some("C++".to_string()),
-                 "rb" => return Some("Ruby".to_string()),
-                 "php" => return Some("PHP".to_string()),
-                 _ => {}
-             }
-         }
-     }
-     None
+    // Iterate through *flattened* directory entries (skips Err, unwraps Ok)
+    for entry in entries.flatten() {
+        // <-- Added .flatten() here
+        // Get the file extension as a string slice, if possible
+        if let Some(ext) = entry.path().extension().and_then(|os| os.to_str()) {
+            // Match against known common extensions
+            // ... (rest of the code, now unindented once)
+            match ext {
+                "rs" => return Some("Rust".to_string()),
+                "go" => return Some("Go".to_string()),
+                "py" => return Some("Python".to_string()),
+                "js" | "mjs" | "cjs" => return Some("JavaScript".to_string()),
+                "ts" | "tsx" => return Some("TypeScript".to_string()),
+                "java" => return Some("Java".to_string()),
+                "kt" | "kts" => return Some("Kotlin".to_string()),
+                "c" | "h" => return Some("C".to_string()),
+                "cpp" | "hpp" | "cxx" | "hxx" => return Some("C++".to_string()),
+                "rb" => return Some("Ruby".to_string()),
+                "php" => return Some("PHP".to_string()),
+                _ => {}
+            }
+        }
+    }
+    None
 }
 
 // --- Unit Tests ---
@@ -539,7 +540,7 @@ mod tests {
             info,
             ProjectInfo {
                 project_type: "Ruby".to_string(), // Detected via .rb extension
-                build_system: "Unknown (by extension)".to_string() // Build system unknown
+                build_system: "Unknown (by extension)".to_string()  // Build system unknown
             }
         );
     }

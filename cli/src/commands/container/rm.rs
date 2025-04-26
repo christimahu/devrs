@@ -123,7 +123,8 @@ pub async fn handle_rm(args: RmArgs) -> Result<()> {
         removal_tasks.push(tokio::spawn(async move {
             // Call the shared Docker utility function to remove the container.
             // This internally uses the Docker API's remove_container operation.
-            match docker::lifecycle::remove_container(&name, force).await { //
+            match docker::lifecycle::remove_container(&name, force).await {
+                //
                 // Removal was successful according to the Docker API.
                 Ok(()) => {
                     println!("Removed container '{}'", name); // Inform the user.
@@ -132,7 +133,8 @@ pub async fn handle_rm(args: RmArgs) -> Result<()> {
                 // Check if the error indicates the container was not found.
                 Err(e)
                     if e.downcast_ref::<crate::core::error::DevrsError>() // Safely attempt to downcast the anyhow::Error
-                        .is_some_and(|de| { // If downcast succeeds, check the DevrsError variant.
+                        .is_some_and(|de| {
+                            // If downcast succeeds, check the DevrsError variant.
                             // Match specifically against the ContainerNotFound variant.
                             matches!(de, crate::core::error::DevrsError::ContainerNotFound { .. })
                         }) =>
@@ -191,7 +193,7 @@ pub async fn handle_rm(args: RmArgs) -> Result<()> {
         }
         // To return a single error, take the first one from the list.
         let first_error = failed_removals.remove(0).1; // Get the anyhow::Error.
-        // Return the first error, adding context about the overall failure.
+                                                       // Return the first error, adding context about the overall failure.
         Err(first_error).context(format!(
             "Failed to remove {} container(s)",
             // The number of failures is the original length of failed_removals.
@@ -199,7 +201,6 @@ pub async fn handle_rm(args: RmArgs) -> Result<()> {
         ))
     }
 }
-
 
 // --- Unit Tests ---
 // Focus on argument parsing for the `rm` command. Testing the handler logic

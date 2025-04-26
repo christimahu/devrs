@@ -48,7 +48,7 @@ use anyhow::{bail, Context}; // Error handling utilities
 use clap::Parser; // Argument parsing
 use std::{
     env, // For SHELL environment variable
-    fs, // For canonicalize
+    fs,  // For canonicalize
 };
 use tracing::{debug, info, warn}; // Logging
 
@@ -112,7 +112,10 @@ pub async fn handle_integrate(_args: IntegrateArgs) -> Result<()> {
             shell_functions_path.display()
         );
     }
-    debug!("Found shell_functions at: {}", shell_functions_path.display());
+    debug!(
+        "Found shell_functions at: {}",
+        shell_functions_path.display()
+    );
 
     // Use canonicalize to get a reliable absolute path for the source command.
     // This resolves symlinks and cleans up the path representation (e.g., removes "..").
@@ -183,7 +186,9 @@ fn detect_shell() -> Result<String> {
         Err(_) => {
             // If $SHELL is not set, log a warning and assume a common default.
             // The instructions will still be generally useful for bash/zsh users.
-            warn!("$SHELL environment variable not found. Assuming bash/zsh compatible instructions.");
+            warn!(
+                "$SHELL environment variable not found. Assuming bash/zsh compatible instructions."
+            );
             Ok("bash".to_string()) // Default for message formatting.
         }
     }
@@ -247,7 +252,10 @@ mod tests {
         let repo_root = temp_dir.path();
 
         // Create the root marker file needed by find_repo_root
-        fs::write(repo_root.join("Cargo.toml"), "[workspace]\nmembers=[\"cli\"]")?;
+        fs::write(
+            repo_root.join("Cargo.toml"),
+            "[workspace]\nmembers=[\"cli\"]",
+        )?;
         // Create the necessary dummy preset structure within the temp dir.
         let presets_dir = repo_root.join("presets");
         fs::create_dir(&presets_dir)?;
@@ -286,11 +294,13 @@ mod tests {
         let temp_dir = tempdir()?;
         let repo_root = temp_dir.path();
         // Create the root marker file needed by find_repo_root
-        fs::write(repo_root.join("Cargo.toml"), "[workspace]\nmembers = [\"cli\"]")?;
+        fs::write(
+            repo_root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"cli\"]",
+        )?;
         // Create the presets dir, but *not* shell_functions inside it
         let presets_dir = repo_root.join("presets");
         fs::create_dir(&presets_dir)?;
-
 
         // Set CWD to the temp repo root.
         let original_cwd = env::current_dir()?;

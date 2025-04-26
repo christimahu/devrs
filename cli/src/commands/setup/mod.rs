@@ -143,7 +143,7 @@ pub async fn handle_setup(args: SetupArgs) -> Result<()> {
     debug!(
         "Repository root check passed (found {} at {}).",
         essential_check_path.display(), // Corrected log message to show file path
-        repo_root.display() // Show the determined root directory
+        repo_root.display()             // Show the determined root directory
     );
     // --- End Repository Root Check ---
 
@@ -182,8 +182,8 @@ pub async fn handle_setup(args: SetupArgs) -> Result<()> {
 ///   the filesystem root.
 pub(crate) fn find_repo_root() -> Result<PathBuf> {
     // Get the directory where the command was run.
-    let start_dir = env::current_dir()
-        .context("Failed to get current directory to start repo root search")?;
+    let start_dir =
+        env::current_dir().context("Failed to get current directory to start repo root search")?;
     let mut current_dir = start_dir.clone(); // Clone to modify in the loop.
 
     // Loop upwards through parent directories.
@@ -252,7 +252,8 @@ mod tests {
     }
 
     #[test]
-    fn test_parses_setup_config() { // Test for new subcommand
+    fn test_parses_setup_config() {
+        // Test for new subcommand
         let args = SetupArgs::try_parse_from(["setup", "config"]).unwrap();
         assert!(matches!(args.command, Some(SetupCommand::Config(_))));
     }
@@ -320,13 +321,12 @@ mod tests {
         let result_fail = find_repo_root();
         assert!(result_fail.is_err());
         if let Err(e) = result_fail {
-             assert!(e.to_string().contains("Could not find repository root"));
+            assert!(e.to_string().contains("Could not find repository root"));
         }
         env::set_current_dir(&original_cwd)?;
 
         Ok(())
     }
-
 
     #[tokio::test]
     #[ignore] // Requires mocking or CWD manipulation and marker files

@@ -66,11 +66,11 @@
 //! ```
 //!
 use crate::core::error::{DevrsError, Result}; // Use standard Result and custom Error
-use anyhow::{anyhow}; // For error context wrapping
+use anyhow::anyhow; // For error context wrapping
 use bollard::{
     container::{InspectContainerOptions, ListContainersOptions}, // Options for inspect/list
     models::{ContainerInspectResponse, ContainerStateStatusEnum, ContainerSummary}, // Response types
-    // Docker client is obtained via connect_docker
+                                                                                    // Docker client is obtained via connect_docker
 };
 use std::collections::HashMap; // For list_containers filters map
 use tracing::{debug, error, info, instrument, warn}; // Logging utilities
@@ -266,9 +266,9 @@ pub async fn list_containers(
     let docker = connect_docker().await?;
     // Prepare options for the list_containers API call.
     let options = Some(ListContainersOptions {
-        all, // Include all states or just running?
+        all,                                  // Include all states or just running?
         filters: filters.unwrap_or_default(), // Use provided filters or empty map.
-        ..Default::default() // Use defaults for other options (e.g., limit, size).
+        ..Default::default()                  // Use defaults for other options (e.g., limit, size).
     });
 
     // Log the action being taken.

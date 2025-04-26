@@ -53,7 +53,7 @@
 use crate::{
     common::docker::{self}, // Access shared Docker utilities (ensure_running, exec_in_container).
     core::{
-        config, // Access configuration loading.
+        config,                      // Access configuration loading.
         error::{DevrsError, Result}, // Standard Result type and custom errors.
     },
 };
@@ -149,9 +149,12 @@ pub async fn handle_exec(args: ExecArgs) -> Result<()> {
 
     // 3. Ensure the core environment container is ready (exists and is running).
     // This function will start or create the container if needed.
-    let _ = docker::lifecycle::ensure_core_env_running(&container_name, &cfg) //
-        .await // Await the async check/preparation.
-        .with_context(|| format!("Failed to prepare container '{}' for exec", container_name))?;
+    let _ =
+        docker::lifecycle::ensure_core_env_running(&container_name, &cfg) //
+            .await // Await the async check/preparation.
+            .with_context(|| {
+                format!("Failed to prepare container '{}' for exec", container_name)
+            })?;
     // We don't need the return value (bool indicating creation) here.
 
     // 4. Validate that a command was actually provided.
@@ -167,16 +170,18 @@ pub async fn handle_exec(args: ExecArgs) -> Result<()> {
         "Executing command {:?} in container '{}' (Interactive: {}, TTY: {})",
         args.command, container_name, args.interactive, args.tty
     );
-    let exit_code = docker::interaction::exec_in_container( //
-        &container_name,        // Target container.
-        &args.command,          // Command and arguments vector.
-        args.interactive,       // Pass interactive flag.
-        args.tty,               // Pass TTY flag.
+    let exit_code = docker::interaction::exec_in_container(
+        //
+        &container_name,         // Target container.
+        &args.command,           // Command and arguments vector.
+        args.interactive,        // Pass interactive flag.
+        args.tty,                // Pass TTY flag.
         args.workdir.as_deref(), // Pass optional working directory.
         args.user.as_deref(),    // Pass optional user.
     )
     .await // Await the async execution.
-    .with_context(|| { // Add context to potential errors during execution.
+    .with_context(|| {
+        // Add context to potential errors during execution.
         format!(
             "Failed to execute command {:?} in container '{}'",
             args.command, container_name
@@ -202,7 +207,8 @@ pub async fn handle_exec(args: ExecArgs) -> Result<()> {
             // Include details in the error for better reporting.
             cmd: args.command.join(" "), // Reconstruct command string for error message.
             status: exit_code.to_string(), // Convert exit code to string.
-            output: format!( // Provide context in the output field.
+            output: format!(
+                // Provide context in the output field.
                 "Command executed in container '{}' exited with code {}",
                 container_name, exit_code
             ),
@@ -231,7 +237,6 @@ fn get_core_env_container_name(cfg: &config::Config) -> String {
     format!("{}-instance", cfg.core_env.image_name)
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing for the `exec` command. Testing the handler logic
 // requires mocking config loading and Docker interactions.
@@ -248,16 +253,16 @@ mod tests {
             "-it",  // Combined interactive and tty flags.
             "--user", "testuser", // User flag.
             "-w", "/app", // Workdir flag.
-            "--", // Add separator before trailing command args
-            "ls",  // Start of the command to execute.
-            "-la", // Argument for the command.            
+            "--",   // Add separator before trailing command args
+            "ls",   // Start of the command to execute.
+            "-la",  // Argument for the command.
         ])
         .unwrap(); // Expect parsing to succeed.
 
         // Verify flags.
         assert!(args.interactive); // -i was present.
         assert!(args.tty); // -t was present.
-        // Verify optional arguments with values.
+                           // Verify optional arguments with values.
         assert_eq!(args.user, Some("testuser".to_string()));
         assert_eq!(args.workdir, Some("/app".to_string()));
         // Verify the captured command and its arguments.
@@ -274,9 +279,9 @@ mod tests {
             "exec",
             "--name", // Specify container name.
             "my-dev-container",
-            "--", // Add separator before trailing command args
-            "bash", // Command part 1.
-            "-c", // Command part 2.
+            "--",         // Add separator before trailing command args
+            "bash",       // Command part 1.
+            "-c",         // Command part 2.
             "echo hello", // Command part 3 (treated as a single argument here).
         ])
         .unwrap();

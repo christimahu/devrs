@@ -59,7 +59,7 @@
 //! ```
 //!
 use crate::core::{
-    config, // Application configuration structure
+    config,                      // Application configuration structure
     error::{DevrsError, Result}, // Standard Result and custom Error types
 };
 use anyhow::{anyhow, Context}; // For error context wrapping
@@ -262,9 +262,8 @@ pub async fn remove_container(name_or_id: &str, force: bool) -> Result<()> {
             }
             // Check if the error during the running check was specifically "Not Found".
             Err(e)
-                if e.downcast_ref::<DevrsError>().is_some_and(|err| {
-                    matches!(err, DevrsError::ContainerNotFound { .. })
-                }) =>
+                if e.downcast_ref::<DevrsError>()
+                    .is_some_and(|err| matches!(err, DevrsError::ContainerNotFound { .. })) =>
             {
                 // Container doesn't exist, so removal is effectively successful.
                 info!("Container '{}' not found, no removal needed.", name_or_id);
@@ -285,8 +284,8 @@ pub async fn remove_container(name_or_id: &str, force: bool) -> Result<()> {
     );
     // Prepare options for the remove_container API call.
     let options = Some(RemoveContainerOptions {
-        force, // Apply the force flag as determined.
-        v: false, // Do not remove associated anonymous volumes by default. Change if needed.
+        force,       // Apply the force flag as determined.
+        v: false,    // Do not remove associated anonymous volumes by default. Change if needed.
         link: false, // Deprecated option, set to false.
     });
 

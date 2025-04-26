@@ -53,8 +53,8 @@ use anyhow::{anyhow, bail, Context}; // Error handling utilities
 use clap::Parser; // Argument parsing
 use directories::BaseDirs; // For finding user data/config directories
 use std::{
-    io::Write as IoWrite, // Bring trait into scope for stdout flush
-    path::Path, // Path manipulation
+    io::Write as IoWrite,      // Bring trait into scope for stdout flush
+    path::Path,                // Path manipulation
     process::{Command, Stdio}, // For running external commands (git, nvim)
 };
 use tracing::{debug, error, info, warn}; // Logging
@@ -104,7 +104,9 @@ pub async fn handle_nvim(args: NvimArgs) -> Result<()> {
 
     // --- 1. Check Dependencies (nvim and git) ---
     print!("Checking for 'nvim' command... ");
-    std::io::stdout().flush().context("Failed to flush stdout")?;
+    std::io::stdout()
+        .flush()
+        .context("Failed to flush stdout")?;
     if !check_command_exists("nvim").await? {
         println!("Missing.");
         bail!("'nvim' command not found in PATH. Please install Neovim first.");
@@ -112,7 +114,9 @@ pub async fn handle_nvim(args: NvimArgs) -> Result<()> {
     println!("Found.");
 
     print!("Checking for 'git' command... ");
-    std::io::stdout().flush().context("Failed to flush stdout")?;
+    std::io::stdout()
+        .flush()
+        .context("Failed to flush stdout")?;
     if !check_command_exists("git").await? {
         println!("Missing.");
         bail!("'git' command not found in PATH. Git is required to install Packer.");
@@ -174,8 +178,8 @@ pub async fn handle_nvim(args: NvimArgs) -> Result<()> {
         target_init_lua.display()
     );
     if args.force && target_init_lua.symlink_metadata().is_ok() {
-         warn!("--force specified, existing target at {} will be backed up if not the correct link or if it's not a link.", target_init_lua.display());
-         // Let create_symlink handle the backup/replace logic.
+        warn!("--force specified, existing target at {} will be backed up if not the correct link or if it's not a link.", target_init_lua.display());
+        // Let create_symlink handle the backup/replace logic.
     }
     fslinks::create_symlink(&source_init_lua, &target_init_lua).with_context(|| {
         format!(
@@ -201,7 +205,9 @@ pub async fn handle_nvim(args: NvimArgs) -> Result<()> {
                 );
             }
         }
-        println!("Packer plugin manager not found or --force used. Installing Packer via git clone...");
+        println!(
+            "Packer plugin manager not found or --force used. Installing Packer via git clone..."
+        );
         // Ensure parent directories exist for the clone target (e.g., .../packer/start/).
         if let Some(packer_parent) = packer_dir.parent() {
             fsio::ensure_dir_exists(packer_parent).with_context(|| {
@@ -212,21 +218,29 @@ pub async fn handle_nvim(args: NvimArgs) -> Result<()> {
             })?;
         } else {
             // This case should be unlikely given the standard path structure.
-            bail!("Could not determine parent directory for Packer installation path: {}", packer_dir.display());
+            bail!(
+                "Could not determine parent directory for Packer installation path: {}",
+                packer_dir.display()
+            );
         }
 
         // Run git clone command to install Packer using internal helper.
         // Convert PathBuf to &str for the command argument safely.
         let Some(packer_dir_str) = packer_dir.to_str() else {
-             bail!("Packer installation path is not valid UTF-8: {}", packer_dir.display());
-         };
+            bail!(
+                "Packer installation path is not valid UTF-8: {}",
+                packer_dir.display()
+            );
+        };
         // Define arguments for git clone.
         let clone_args = &["clone", "--depth", "1", PACKER_REPO_URL, packer_dir_str][..];
 
         // Execute the git clone command.
         run_external_command("git", clone_args, None)
             .await
-            .with_context(|| format!("Failed to clone Packer repository into {}", packer_dir_str))?;
+            .with_context(|| {
+                format!("Failed to clone Packer repository into {}", packer_dir_str)
+            })?;
 
         println!("✅ Packer installed successfully.");
     } else {
@@ -291,8 +305,10 @@ async fn check_command_exists(cmd_name: &str) -> Result<bool> {
             debug!("Command '{}' not found (ErrorKind::NotFound).", cmd_name);
             Ok(false)
         }
-        Err(e) => Err(anyhow::Error::new(e)
-            .context(format!("Failed to execute command check for '{}'", cmd_name))),
+        Err(e) => Err(anyhow::Error::new(e).context(format!(
+            "Failed to execute command check for '{}'",
+            cmd_name
+        ))),
     }
 }
 
@@ -311,11 +327,7 @@ async fn check_command_exists(cmd_name: &str) -> Result<bool> {
 ///
 /// * `Result<()>`: `Ok(())` if the command exits successfully (status code 0).
 /// * `Err`: If the command cannot be executed or exits non-zero, returning `DevrsError::ExternalCommand`.
-async fn run_external_command(
-    program: &str,
-    args: &[&str],
-    cwd: Option<&Path>,
-) -> Result<()> {
+async fn run_external_command(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<()> {
     info!("Executing command: {} {:?}", program, args);
     let mut command = tokio::process::Command::new(program);
     command.args(args);
@@ -330,10 +342,12 @@ async fn run_external_command(
     command.stdin(Stdio::inherit());
 
     // Execute the command asynchronously and wait for its status.
-    let status = command
-        .status()
-        .await
-        .with_context(|| format!("Failed to execute command '{}'. Is it installed and in PATH?", program))?;
+    let status = command.status().await.with_context(|| {
+        format!(
+            "Failed to execute command '{}'. Is it installed and in PATH?",
+            program
+        )
+    })?;
 
     // Check if the command executed successfully (exit code 0).
     if !status.success() {
@@ -354,7 +368,6 @@ async fn run_external_command(
     Ok(())
 }
 
-
 // --- Unit Tests ---
 /// Tests for Neovim setup arguments and logic.
 #[cfg(test)]
@@ -373,13 +386,9 @@ mod tests {
         );
 
         // Test parsing with flags enabled.
-        let args_flags =
-            NvimArgs::try_parse_from(["nvim", "--force", "--skip-plugins"]).unwrap();
+        let args_flags = NvimArgs::try_parse_from(["nvim", "--force", "--skip-plugins"]).unwrap();
         assert!(args_flags.force, "force should be true");
-        assert!(
-            args_flags.skip_plugins,
-            "skip_plugins should be true"
-        );
+        assert!(args_flags.skip_plugins, "skip_plugins should be true");
 
         // Test parsing with short flag -f for force.
         let args_force_only = NvimArgs::try_parse_from(["nvim", "-f"]).unwrap();
@@ -405,9 +414,13 @@ mod tests {
         // println!("Nvim found in test env: {}", nvim_found); // Informational
 
         // Test for a non-existent command
-        let non_existent_found = check_command_exists("nonexistent_devrs_cmd_0987").await.unwrap_or(true);
-        assert!(!non_existent_found, "Non-existent command should not be found");
-
+        let non_existent_found = check_command_exists("nonexistent_devrs_cmd_0987")
+            .await
+            .unwrap_or(true);
+        assert!(
+            !non_existent_found,
+            "Non-existent command should not be found"
+        );
     }
 
     /// Test the helper function for running external commands (success case).
@@ -437,7 +450,9 @@ mod tests {
         // Check if it's the specific ExternalCommand error with status "1".
         let err = result.unwrap_err();
         let devrs_err = err.downcast_ref::<DevrsError>();
-        assert!(matches!(devrs_err, Some(DevrsError::ExternalCommand { status, .. }) if status == "1"));
+        assert!(
+            matches!(devrs_err, Some(DevrsError::ExternalCommand { status, .. }) if status == "1")
+        );
     }
 
     /// Test the helper function for running external commands (failure case - not found).
@@ -451,7 +466,6 @@ mod tests {
             .to_string()
             .contains("Failed to execute command"));
     }
-
 
     /// Placeholder test for the main handler logic (`handle_nvim`).
     /// Requires extensive mocking of filesystem, BaseDirs, find_repo_root,

@@ -48,7 +48,7 @@
 use crate::{
     common::docker, // Access shared Docker utilities (stop, remove, build).
     core::{config, error::Result}, // Standard config loading and Result type.
-    // Removed direct imports of build and stop handlers as they are not called directly.
+                    // Removed direct imports of build and stop handlers as they are not called directly.
 };
 use anyhow::Context; // For adding context to errors.
 use clap::Parser; // For parsing command-line arguments.
@@ -118,7 +118,7 @@ pub struct RebuildArgs {
 /// * `Err`: Returns an `Err` if config loading fails, the Dockerfile is not found, or the Docker build process fails. Failures during the stop/remove phases are logged as warnings but do not typically cause the command to fail overall.
 pub async fn handle_rebuild(args: RebuildArgs) -> Result<()> {
     info!("Handling env rebuild command..."); // Log entry point.
-    // Log the specific arguments received.
+                                              // Log the specific arguments received.
     info!(
         "(Name: {:?}, NoCache: {}, WithPlugins: {})",
         args.name, args.no_cache, args.with_plugins
@@ -152,8 +152,10 @@ pub async fn handle_rebuild(args: RebuildArgs) -> Result<()> {
         "Attempting to stop existing container '{}' (if running)...",
         container_name
     );
-    match docker::lifecycle::stop_container(&container_name, Some(5)).await { // Use short 5s timeout.
-        Ok(()) => info!( // Log success or already stopped.
+    match docker::lifecycle::stop_container(&container_name, Some(5)).await {
+        // Use short 5s timeout.
+        Ok(()) => info!(
+            // Log success or already stopped.
             "Container '{}' stopped or was already stopped.",
             container_name
         ),
@@ -176,12 +178,14 @@ pub async fn handle_rebuild(args: RebuildArgs) -> Result<()> {
         container_name
     );
     // Use force=true here to handle containers that might be stopped but not cleanly removable otherwise.
-    match docker::lifecycle::remove_container(&container_name, true).await { //
-        Ok(()) => info!( // Log success or already absent.
+    match docker::lifecycle::remove_container(&container_name, true).await {
+        //
+        Ok(()) => info!(
+            // Log success or already absent.
             "Container '{}' removed or was already absent.",
             container_name
         ),
-         // Handle container not found specifically (it's okay for rebuild).
+        // Handle container not found specifically (it's okay for rebuild).
         Err(e)
             if e.downcast_ref::<crate::core::error::DevrsError>()
                 .is_some_and(|de| {
@@ -220,19 +224,21 @@ pub async fn handle_rebuild(args: RebuildArgs) -> Result<()> {
     // Try to get canonical path for context logging, but don't fail if it errors.
     let context_display_path = Path::new(context_dir_str).canonicalize().map_or_else(
         |_| context_dir_str.to_string(), // Fallback to "." if canonicalize fails
-        |p| p.display().to_string()
+        |p| p.display().to_string(),
     );
     info!("Using build context: {}", context_display_path);
 
     // Call the shared build function.
-    docker::build_image( //
+    docker::build_image(
+        //
         &full_image_tag,
         dockerfile_path_str, // Pass relative path string.
         context_dir_str,     // Pass context path string (".").
         args.no_cache,       // Pass no-cache flag.
     )
     .await // Await the async build.
-    .with_context(|| { // Add context on error.
+    .with_context(|| {
+        // Add context on error.
         format!(
             "Failed to build core environment image '{}'",
             full_image_tag
@@ -269,7 +275,6 @@ fn get_core_env_container_name(cfg: &config::Config) -> String {
     format!("{}-instance", cfg.core_env.image_name)
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing. Testing handler logic requires mocking.
 #[cfg(test)]
@@ -296,16 +301,15 @@ mod tests {
     }
 
     /// Test parsing with only default flags.
-     #[test]
+    #[test]
     fn test_rebuild_args_parsing_defaults() {
-         // Simulate `devrs env rebuild`
-         let args = RebuildArgs::try_parse_from(["rebuild"]).unwrap();
-         // Verify default values.
-         assert!(args.name.is_none());
-         assert!(!args.no_cache);
-         assert!(!args.with_plugins);
-     }
-
+        // Simulate `devrs env rebuild`
+        let args = RebuildArgs::try_parse_from(["rebuild"]).unwrap();
+        // Verify default values.
+        assert!(args.name.is_none());
+        assert!(!args.no_cache);
+        assert!(!args.with_plugins);
+    }
 
     // Note: Testing the `handle_rebuild` function's logic requires mocking:
     // 1. `config::load_config` -> To provide known core env settings.
@@ -334,7 +338,7 @@ mod tests {
 
         // --- Assertions ---
         assert!(result.is_ok()); // Expect overall success if mocks are set up correctly.
-        // Verify mocks show stop, rm, and build (from common::docker) were called in order.
-        // Verify correct arguments passed to build_image (tag from config, no_cache=true).
+                                 // Verify mocks show stop, rm, and build (from common::docker) were called in order.
+                                 // Verify correct arguments passed to build_image (tag from config, no_cache=true).
     }
 }

@@ -43,7 +43,7 @@
 //! (via the underlying Docker utility) and streaming interruptions.
 //!
 use crate::{
-    common::docker, // Access shared Docker utilities.
+    common::docker,      // Access shared Docker utilities.
     core::error::Result, // Standard Result type for error handling.
 };
 use anyhow::Context; // For adding context to errors.
@@ -139,7 +139,8 @@ pub async fn handle_logs(args: LogsArgs) -> Result<()> {
         tail,                       // Pass the validated tail option.
     )
     .await // Await the async operation.
-    .with_context(|| { // Add context to any potential error from the utility function.
+    .with_context(|| {
+        // Add context to any potential error from the utility function.
         format!(
             "Failed to get logs for container '{}'",
             args.container_name_or_id
@@ -158,7 +159,6 @@ pub async fn handle_logs(args: LogsArgs) -> Result<()> {
     Ok(()) // Indicate successful execution.
 }
 
-
 // --- Unit Tests ---
 // Focus on testing the argument parsing logic for this specific command.
 // Testing the `handle_logs` logic itself would require mocking the `docker::interaction::get_container_logs` call.
@@ -170,8 +170,8 @@ mod tests {
     #[test]
     fn test_logs_args_parsing() {
         // Simulate `devrs container logs my-app-container -f --lines 500`
-        let args = LogsArgs::try_parse_from(["logs", "my-app-container", "-f", "--lines", "500"])
-            .unwrap();
+        let args =
+            LogsArgs::try_parse_from(["logs", "my-app-container", "-f", "--lines", "500"]).unwrap();
         // Verify the required name was parsed correctly.
         assert_eq!(args.container_name_or_id, "my-app-container");
         // Verify the --follow flag was parsed.

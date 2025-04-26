@@ -189,7 +189,8 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     // --- Validate Dockerfile Existence ---
     // Check if the Dockerfile exists and is a file in the expected location relative to CWD.
     // Assumes the command is run from the repository root.
-    if !dockerfile_path.is_file() { // Use is_file() for better check
+    if !dockerfile_path.is_file() {
+        // Use is_file() for better check
         bail!(
             "Core environment Dockerfile not found at expected path: '{}'. Please run this command from the root of the devrs repository.",
             dockerfile_path.display()
@@ -206,13 +207,14 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     );
     // Call the shared Docker build utility function.
     docker::build_image(
-        &full_image_tag,        // The final image tag.
-        dockerfile_path_str,    // Relative path to Dockerfile within context.
-        context_dir_str,        // Build context path (".").
-        args.no_cache,          // Pass the no-cache flag.
+        &full_image_tag,     // The final image tag.
+        dockerfile_path_str, // Relative path to Dockerfile within context.
+        context_dir_str,     // Build context path (".").
+        args.no_cache,       // Pass the no-cache flag.
     )
     .await // Await the async build process.
-    .with_context(|| { // Add context if the build function returns an error.
+    .with_context(|| {
+        // Add context if the build function returns an error.
         format!(
             "Failed to build core environment image '{}'",
             full_image_tag
@@ -232,7 +234,6 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
 
     Ok(()) // Indicate overall success.
 }
-
 
 // --- Unit Tests ---
 /// Tests for the `env build` subcommand arguments and logic.
@@ -263,7 +264,7 @@ mod tests {
         let temp_dir = tempdir()?;
         let presets_dir = temp_dir.path().join("presets");
         fs::create_dir(&presets_dir)?; // Create presets subdir
-        // Create the renamed dockerfile inside presets
+                                       // Create the renamed dockerfile inside presets
         fs::write(
             presets_dir.join("Dockerfile.devrs"),
             "FROM scratch\nLABEL test=ok",

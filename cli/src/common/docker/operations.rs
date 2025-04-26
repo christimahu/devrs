@@ -86,7 +86,7 @@ use bollard::{
     },
     image::BuildImageOptions, // Options struct for image building
     models::{BuildInfo, HostConfig, Mount, MountTypeEnum, PortBinding}, // Data models from Docker API
-    // Docker client is obtained via connect_docker
+                                                                        // Docker client is obtained via connect_docker
 };
 use futures_util::stream::StreamExt; // Required for processing streams (like build output)
 use std::collections::HashMap; // For port bindings and env vars maps
@@ -139,7 +139,10 @@ pub async fn build_image(
     let context_path = Path::new(context_dir);
 
     // Create the build context archive (gzipped tarball of the context directory).
-    info!("Creating build context tarball for '{}'...", context_path.display());
+    info!(
+        "Creating build context tarball for '{}'...",
+        context_path.display()
+    );
     let tar_gz =
         create_context_tar(context_path).context("Failed to create build context tarball")?;
     info!("Build context created successfully.");
@@ -158,8 +161,8 @@ pub async fn build_image(
     info!("Starting image build for tag: {}", tag);
     // `build_image` returns a stream of build events.
     let mut build_stream = docker.build_image(
-        build_options, // Pass the configured options.
-        None,          // No custom registry auth config needed for local build.
+        build_options,       // Pass the configured options.
+        None,                // No custom registry auth config needed for local build.
         Some(tar_gz.into()), // Provide the build context as request body.
     );
 
@@ -184,7 +187,7 @@ pub async fn build_image(
                     // Format the error message.
                     let detail_msg = error_detail.and_then(|d| d.message).unwrap_or_default();
                     error!("Build Error: {} - {}", err, detail_msg); // Log the detailed error.
-                    // Return our specific Docker build error.
+                                                                     // Return our specific Docker build error.
                     return Err(anyhow!(DevrsError::Docker(format!(
                         "Build failed: {}. {}",
                         err, detail_msg
@@ -367,7 +370,7 @@ pub async fn run_container(
         attach_stdout: Some(attach_streams),
         attach_stderr: Some(attach_streams),
         attach_stdin: Some(attach_streams), // Attach stdin if running foreground
-        open_stdin: Some(attach_streams),  // Keep stdin open if running foreground
+        open_stdin: Some(attach_streams),   // Keep stdin open if running foreground
         // Allocate TTY usually matches stream attachment for basic interaction.
         // For fine-grained control (e.g., non-interactive foreground), callers might use
         // interaction::exec_in_container or lower-level API calls.
@@ -392,7 +395,7 @@ pub async fn run_container(
 
     // --- Create and Start the Container ---
     info!("Creating container '{}' from image '{}'", name, image); // Log action.
-    // Define options for the create_container API call (primarily the name).
+                                                                   // Define options for the create_container API call (primarily the name).
     let create_options = Some(CreateContainerOptions {
         name: name.to_string(),
         platform: None, // Platform override (optional).
@@ -407,7 +410,7 @@ pub async fn run_container(
 
     // Container created successfully, now start it.
     info!("Starting container '{}' (ID: {})", name, container_info.id); // Log start action.
-    // Make the API call to start the container.
+                                                                        // Make the API call to start the container.
     docker
         .start_container(name, None::<StartContainerOptions<String>>) // No specific start options needed
         .await
@@ -475,12 +478,12 @@ fn convert_mounts_to_bollard(mounts_config: &[config::MountConfig]) -> Result<Ve
         bollard_mounts.push(Mount {
             target: Some(mc.container.clone()), // Path inside the container.
             source: Some(mc.host.clone()),      // Path on the host system.
-            typ: Some(MountTypeEnum::BIND),     // Specify mount type as 'bind'. Volume mounts would use MountTypeEnum::VOLUME.
-            read_only: Some(mc.readonly),       // Apply read-only flag.
-            consistency: None,                  // Default consistency.
-            bind_options: None,                 // No specific bind options needed.
-            volume_options: None,               // Not a volume mount.
-            tmpfs_options: None,                // Not a tmpfs mount.
+            typ: Some(MountTypeEnum::BIND), // Specify mount type as 'bind'. Volume mounts would use MountTypeEnum::VOLUME.
+            read_only: Some(mc.readonly),   // Apply read-only flag.
+            consistency: None,              // Default consistency.
+            bind_options: None,             // No specific bind options needed.
+            volume_options: None,           // Not a volume mount.
+            tmpfs_options: None,            // Not a tmpfs mount.
         });
     }
     // Return the vector of converted mount configurations.
@@ -504,7 +507,7 @@ mod tests {
                 readonly: false,
             },
             MountConfig {
-                host: "/etc/config.toml".into(),   // Absolute host path
+                host: "/etc/config.toml".into(),      // Absolute host path
                 container: "/app/config.toml".into(), // Absolute container path
                 readonly: true,
             },

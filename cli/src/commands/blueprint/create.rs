@@ -48,14 +48,14 @@
 use crate::core::config; // Access configuration loading (e.g., blueprint directory path)
 use crate::core::error::Result; // Use the standard Result type for error handling
 use crate::core::templating; // Access the core templating engine logic
-// Filesystem utilities might be used directly or indirectly (e.g., through templating)
+                             // Filesystem utilities might be used directly or indirectly (e.g., through templating)
 use anyhow::{anyhow, Context}; // For easy error creation and adding context
 use clap::Parser; // For parsing command-line arguments
 use pathdiff; // For calculating relative paths for user messages
 use std::{
-    collections::HashMap, // For storing template context variables
-    env,                  // For getting current directory and environment variables (like USER)
-    fs,                   // Standard filesystem operations (checking existence, creating dirs)
+    collections::HashMap,  // For storing template context variables
+    env,                   // For getting current directory and environment variables (like USER)
+    fs,                    // Standard filesystem operations (checking existence, creating dirs)
     path::{Path, PathBuf}, // Filesystem path types
 };
 use tracing::{debug, info, warn}; // For logging
@@ -528,7 +528,6 @@ fn print_completion_message(target_path: &Path, project_name: &str) {
     // Add more checks here for other project types (Maven, Gradle, Composer, etc.) if needed.
 }
 
-
 // --- Unit Tests ---
 #[cfg(test)]
 mod tests {
@@ -554,7 +553,7 @@ mod tests {
             "--output", // Optional output directory
             "/tmp/projects",
             "--force", // Optional force flag
-            "--var", // Optional custom variables
+            "--var",   // Optional custom variables
             "author=Jane Doe",
             "--var",
             "version=1.0.0",
@@ -606,8 +605,8 @@ mod tests {
         assert_eq!(k_only, "keyonly");
         assert_eq!(v_only, "");
         // Only value
-         assert!(parse_key_val("=valueonly").is_ok());
-         let (k_empty, v_val) = parse_key_val("=valueonly").unwrap();
+        assert!(parse_key_val("=valueonly").is_ok());
+        let (k_empty, v_val) = parse_key_val("=valueonly").unwrap();
         assert_eq!(k_empty, "");
         assert_eq!(v_val, "valueonly");
     }
@@ -624,7 +623,7 @@ mod tests {
         assert_eq!(to_camel_case("PascalCase"), "pascalCase");
         assert_eq!(to_camel_case(""), "");
 
-         // PascalCase
+        // PascalCase
         assert_eq!(to_pascal_case("my-project"), "MyProject");
         assert_eq!(to_pascal_case("my_project"), "MyProject");
         assert_eq!(to_pascal_case("awesome-api-service"), "AwesomeApiService");
@@ -654,8 +653,8 @@ mod tests {
                 ("custom_key".into(), "custom_val".into()),
                 // Override a default variable
                 ("project_name".into(), "override".into()),
-                 // Test snake case override input
-                 ("project_name_snake".into(), "user_snake".into()),
+                // Test snake case override input
+                ("project_name_snake".into(), "user_snake".into()),
             ],
         };
 
@@ -669,9 +668,9 @@ mod tests {
         assert_eq!(context.get("project_name_lowercase").unwrap(), "my-app");
         assert_eq!(context.get("project_name_uppercase").unwrap(), "MY-APP");
         assert_eq!(context.get("project_name_kebab").unwrap(), "my-App"); // Original name
-        // Check that user override for snake_case worked.
+                                                                          // Check that user override for snake_case worked.
         assert_eq!(context.get("project_name_snake").unwrap(), "user_snake");
-         // Check calculated camel/pascal cases based on original name.
+        // Check calculated camel/pascal cases based on original name.
         assert_eq!(context.get("project_name_camel").unwrap(), "myApp");
         assert_eq!(context.get("project_name_pascal").unwrap(), "MyApp");
         // Check presence of date/time/user variables.

@@ -100,7 +100,7 @@ pub fn copy_directory_recursive(source: &Path, target: &Path) -> Result<()> {
         .map_err(|e| {
             // Convert the fs_extra error into an anyhow::Error for flexible handling.
             anyhow::anyhow!(e)
-                 // Add context indicating the operation that failed.
+                // Add context indicating the operation that failed.
                 .context(format!("Failed to copy dir {:?} to {:?}", source, target))
         })?; // Propagate the error if the copy fails.
 

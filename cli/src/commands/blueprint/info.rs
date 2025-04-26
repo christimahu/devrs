@@ -64,7 +64,7 @@ use crate::core::error::Result; // Standard result type
 use anyhow::Context; // For adding context to errors
 use clap::Parser; // For command-line argument parsing
 use std::{
-    fs, // Standard filesystem operations (reading files)
+    fs,                    // Standard filesystem operations (reading files)
     path::{Path, PathBuf}, // Filesystem path types
 };
 use tracing::{debug, info, warn}; // Logging framework
@@ -313,7 +313,8 @@ fn extract_title_and_description(content: &str) -> (String, String) {
             .map(|l| l.trim()) // Trim each line
             .find(|l| !l.is_empty() && !l.starts_with('#')) // Find the first suitable line
             .map(|l| l.to_string()) // Convert to String if found
-            .unwrap_or_else(|| "No description available in README.".to_string()) // Default if still nothing
+            .unwrap_or_else(|| "No description available in README.".to_string())
+    // Default if still nothing
     } else {
         // Join the captured lines into a single string, separated by spaces.
         description_lines.join(" ")
@@ -458,7 +459,8 @@ fn print_project_info(project_info: &ProjectInfo, has_dockerfile: bool) {
 fn print_file_structure(blueprint_path: &Path, blueprint_name: &str) -> Result<()> {
     println!("┃ 📁 File Structure:");
     // Attempt to generate the directory tree string.
-    match tree_printer::print_directory_tree_to_string(blueprint_path, blueprint_name) { //
+    match tree_printer::print_directory_tree_to_string(blueprint_path, blueprint_name) {
+        //
         Ok(tree_string) => {
             // If successful, iterate through the lines of the tree string.
             for line in tree_string.lines() {
@@ -516,7 +518,6 @@ fn print_usage_info(blueprint_name: &str, usage_notes: &Option<String>) {
         }
     }
 }
-
 
 // --- Unit Tests ---
 #[cfg(test)]
@@ -617,12 +618,15 @@ mod tests {
         );
 
         // Test Case 7: Empty Usage section
-         let readme7 = "# Title\n## Usage\n\n## Next Section";
+        let readme7 = "# Title\n## Usage\n\n## Next Section";
         assert_eq!(extract_usage_from_readme(readme7), None); // Empty section results in None
 
-         // Test Case 8: Usage section at end of file
-         let readme8 = "# Title\n## Running\nRun command foo\n";
-         assert_eq!(extract_usage_from_readme(readme8), Some("Run command foo".to_string()));
+        // Test Case 8: Usage section at end of file
+        let readme8 = "# Title\n## Running\nRun command foo\n";
+        assert_eq!(
+            extract_usage_from_readme(readme8),
+            Some("Run command foo".to_string())
+        );
     }
 
     // --- Test Handler Logic (Requires Mocks) ---
@@ -687,7 +691,7 @@ mod tests {
 
         // --- Assertion ---
         assert!(result.is_err()); // Expect an error because the blueprint path doesn't exist
-        // Check that the error message indicates the blueprint wasn't found.
+                                  // Check that the error message indicates the blueprint wasn't found.
         assert!(result.unwrap_err().to_string().contains("not found"));
     }
 }

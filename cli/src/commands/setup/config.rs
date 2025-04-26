@@ -48,7 +48,7 @@
 use crate::{
     commands::setup::find_repo_root, // Use shared helper to find repo root
     common::fs::{io as fsio, links as fslinks}, // Filesystem utilities
-    core::error::Result, // Standard Result type
+    core::error::Result,             // Standard Result type
 };
 use anyhow::{bail, Context}; // Error handling utilities
 use clap::Parser; // Argument parsing
@@ -100,8 +100,7 @@ pub async fn handle_config(_args: ConfigArgs) -> Result<()> {
     let repo_config_sample_path = presets_dir.join(SAMPLE_CONFIG_FILENAME); // Path for the template
 
     // Ensure presets directory exists (important if cloning fresh).
-    fsio::ensure_dir_exists(&presets_dir)
-        .context("Failed to ensure presets directory exists")?;
+    fsio::ensure_dir_exists(&presets_dir).context("Failed to ensure presets directory exists")?;
 
     debug!("Presets dir: {}", presets_dir.display());
     debug!("Active config path: {}", repo_config_path.display());
@@ -153,7 +152,8 @@ pub async fn handle_config(_args: ConfigArgs) -> Result<()> {
             "Found existing {}. Leaving it untouched.",
             repo_config_path.display()
         );
-        println!( // User message
+        println!(
+            // User message
             "Found existing {} in presets/, skipping creation from sample.",
             ACTIVE_CONFIG_FILENAME
         );
@@ -162,13 +162,16 @@ pub async fn handle_config(_args: ConfigArgs) -> Result<()> {
     // --- Set up User Config Symlink ---
     // Determine the standard platform-specific user configuration directory path.
     let Some(proj_dirs) = ProjectDirs::from("com", "DevRS", "devrs") else {
-         // Error if we can't determine the user config directory (e.g., unsupported OS, weird env).
-         bail!("Could not determine standard user config directory.");
-     };
+        // Error if we can't determine the user config directory (e.g., unsupported OS, weird env).
+        bail!("Could not determine standard user config directory.");
+    };
     let user_config_dir = proj_dirs.config_dir().to_path_buf(); // e.g., ~/.config/devrs/
     let user_config_path = user_config_dir.join(ACTIVE_CONFIG_FILENAME); // e.g., ~/.config/devrs/config.toml
 
-    debug!("Standard user config path target: {}", user_config_path.display());
+    debug!(
+        "Standard user config path target: {}",
+        user_config_path.display()
+    );
 
     // Ensure the user configuration directory exists, creating it if necessary.
     fsio::ensure_dir_exists(&user_config_dir).with_context(|| {
@@ -195,7 +198,6 @@ pub async fn handle_config(_args: ConfigArgs) -> Result<()> {
 
     Ok(()) // Indicate successful completion.
 }
-
 
 // --- Unit Tests ---
 #[cfg(test)]

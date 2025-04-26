@@ -202,7 +202,6 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
     }
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing for the `stop` command. Testing the handler logic
 // requires mocking the Docker API interaction within `docker::lifecycle::stop_container`.
@@ -231,13 +230,12 @@ mod tests {
     /// Test parsing with default timeout.
     #[test]
     fn test_stop_args_parsing_default_time() {
-         // Simulate `devrs container stop c1` (no time flag)
-         let args = StopArgs::try_parse_from([ "stop", "c1" ]).unwrap();
-         assert_eq!(args.container_names_or_ids, vec!["c1"]);
-         // Verify the default timeout value is used.
-         assert_eq!(args.time, 10);
+        // Simulate `devrs container stop c1` (no time flag)
+        let args = StopArgs::try_parse_from(["stop", "c1"]).unwrap();
+        assert_eq!(args.container_names_or_ids, vec!["c1"]);
+        // Verify the default timeout value is used.
+        assert_eq!(args.time, 10);
     }
-
 
     /// Test that the command fails parsing if no container names/IDs are provided.
     #[test]

@@ -40,13 +40,13 @@ fn test_env_exec() {
     // TODO: Ensure core env container is running (or mock ensure_core_env_running)
     // TODO: Run `devrs env exec -- echo hello`
     // TODO: Assert success and check stdout
-     devrs_cmd()
+    devrs_cmd()
         .args(["env", "exec", "--", "echo", "hello"])
         .assert()
         // This will likely fail if core env cannot be ensured running
         .failure();
-        // .success()
-        // .stdout(predicate::str::contains("hello"));
+    // .success()
+    // .stdout(predicate::str::contains("hello"));
 }
 
 /// # Test Env Logs (`test_env_logs`)
@@ -57,10 +57,11 @@ fn test_env_exec() {
 #[test]
 // #[ignore] // REMOVED ignore - Test is for an implemented feature
 fn test_env_logs() {
-     // TODO: Ensure core env container is running
-     // TODO: Run `devrs env logs`
-     // TODO: Assert success
-    devrs_cmd().args(["env", "logs"])
+    // TODO: Ensure core env container is running
+    // TODO: Run `devrs env logs`
+    // TODO: Assert success
+    devrs_cmd()
+        .args(["env", "logs"])
         .assert()
         // This will likely fail without docker/mocking
         .failure();
@@ -74,10 +75,11 @@ fn test_env_logs() {
 #[test]
 #[ignore] // TODO
 fn test_env_stop() {
-     // TODO: Ensure core env container is running
-     // TODO: Run `devrs env stop`
-     // TODO: Assert success
-    devrs_cmd().args(["env", "stop"])
+    // TODO: Ensure core env container is running
+    // TODO: Run `devrs env stop`
+    // TODO: Assert success
+    devrs_cmd()
+        .args(["env", "stop"])
         .assert()
         // This will likely fail without docker/mocking
         .failure();
@@ -90,7 +92,10 @@ fn test_env_stop() {
 /// Primarily checks argument parsing; full functionality requires Docker.
 #[test]
 fn test_env_prune() {
-    devrs_cmd().args(["env", "prune", "--force"]).assert().success();
+    devrs_cmd()
+        .args(["env", "prune", "--force"])
+        .assert()
+        .success();
 }
 
 /// # Test Env Build (`test_env_build`)

@@ -45,17 +45,17 @@
 //!
 use crate::{
     commands::setup::{
-        config, // Import the new config handler module
-        deps,   // Dependency check handler
+        config,    // Import the new config handler module
+        deps,      // Dependency check handler
         integrate, // Shell integration instruction handler
-        nvim,   // Neovim setup handler
-                // find_repo_root is no longer needed directly here
+        nvim,      // Neovim setup handler
+                   // find_repo_root is no longer needed directly here
     },
     core::error::Result, // Standard Result type
 };
 use anyhow::Context; // Error handling utilities
 use clap::Parser; // Argument parsing
-// Filesystem, IO, Dirs etc are now primarily handled within the specific handlers
+                  // Filesystem, IO, Dirs etc are now primarily handled within the specific handlers
 use tracing::info; // Logging
 
 /// # Setup All Arguments (`AllArgs`)
@@ -152,7 +152,6 @@ pub async fn handle_all(args: AllArgs) -> Result<()> {
     Ok(()) // Indicate overall success of the 'all' sequence.
 }
 
-
 // --- Unit Tests --- (Keep existing tests for AllArgs parsing)
 #[cfg(test)]
 mod tests {
@@ -164,12 +163,8 @@ mod tests {
         assert!(!args_default.force_nvim);
         assert!(!args_default.skip_nvim_plugins);
 
-        let args_flags = AllArgs::try_parse_from([
-            "all",
-            "--force-nvim",
-            "--skip-nvim-plugins",
-        ])
-        .unwrap();
+        let args_flags =
+            AllArgs::try_parse_from(["all", "--force-nvim", "--skip-nvim-plugins"]).unwrap();
         assert!(args_flags.force_nvim);
         assert!(args_flags.skip_nvim_plugins);
 

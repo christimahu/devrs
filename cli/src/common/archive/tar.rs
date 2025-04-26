@@ -97,7 +97,8 @@ pub fn create_context_tar(context_path: &Path) -> Result<Vec<u8>> {
     // to the root of the archive itself (e.g., files in `context_path/src` will appear as `src/...` inside the tar).
     tar_builder
         .append_dir_all(".", context_path)
-        .with_context(|| { // Add context to potential errors during directory traversal/adding.
+        .with_context(|| {
+            // Add context to potential errors during directory traversal/adding.
             format!(
                 "Failed to add directory '{}' contents to the tar archive",
                 context_path.display()
@@ -124,10 +125,10 @@ pub fn create_context_tar(context_path: &Path) -> Result<Vec<u8>> {
 mod tests {
     // Unit tests remain unchanged as the code logic was not modified.
     use super::*;
-    use std::fs;
-    use tempfile::tempdir;
     use flate2::read::GzDecoder;
+    use std::fs;
     use tar::Archive;
+    use tempfile::tempdir;
 
     #[test]
     fn test_create_context_tar_basic() -> Result<()> {

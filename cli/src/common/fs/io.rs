@@ -209,7 +209,7 @@ mod tests {
         fs::create_dir(&existing_dir)?;
         // Action: Call the function on the existing directory.
         ensure_dir_exists(&existing_dir)?; // Should be a no-op and succeed.
-        // Assert: Verify the directory still exists and is a directory.
+                                           // Assert: Verify the directory still exists and is a directory.
         assert!(existing_dir.is_dir());
         Ok(()) // Test passes.
     }
@@ -242,7 +242,7 @@ mod tests {
         // Define the path for the test file.
         let file_path = base_dir.path().join("test_rw.txt");
         let content = "Hello, DevRS!"; // Content to write.
-        // Action: Write the string content to the file.
+                                       // Action: Write the string content to the file.
         write_string_to_file(&file_path, content)?;
         // Assert: Verify the file was created.
         assert!(file_path.exists());

@@ -62,11 +62,11 @@ fn test_setup_integrate() {
         .assert()
         .success() // Expect exit code 0
         .stdout(
-                // Check for essential parts that are always present.
-                predicate::str::contains("source") // Check for the 'source' keyword
-                    .and(predicate::str::contains("presets/shell_functions")) // Check for the script path segment
-                    .and(predicate::str::contains("manually add** the following")), // <<< Check for this more specific, stable phrase
-            );
+            // Check for essential parts that are always present.
+            predicate::str::contains("source") // Check for the 'source' keyword
+                .and(predicate::str::contains("presets/shell_functions")) // Check for the script path segment
+                .and(predicate::str::contains("manually add** the following")), // <<< Check for this more specific, stable phrase
+        );
 }
 
 /// # Test: `devrs setup nvim`

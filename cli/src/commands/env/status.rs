@@ -41,7 +41,7 @@
 use crate::{
     common::docker::{self}, // Access shared Docker utilities (image_exists, inspect_container).
     core::{
-        config, // Access configuration loading.
+        config,                      // Access configuration loading.
         error::{DevrsError, Result}, // Standard Result type and custom errors.
     },
 };
@@ -102,34 +102,39 @@ pub async fn handle_status(args: StatusArgs) -> Result<()> {
 
     // 3. Check if the *image* for the core environment exists locally (informational).
     let image_name_with_tag = format!("{}:{}", cfg.core_env.image_name, cfg.core_env.image_tag);
-    match docker::images::image_exists(&image_name_with_tag).await { //
-        Ok(true) => info!( // Log if image found.
+    match docker::images::image_exists(&image_name_with_tag).await {
+        //
+        Ok(true) => info!(
+            // Log if image found.
             "Core environment image '{}' found locally.",
             image_name_with_tag
         ),
-        Ok(false) => warn!( // Warn if image not found.
+        Ok(false) => warn!(
+            // Warn if image not found.
             "Core environment image '{}' not found locally. Run 'devrs env build'.",
             image_name_with_tag
         ),
         Err(e) => warn!("Could not check image existence: {}", e), // Warn on error checking image.
     }
 
-    println!( // Inform user which container status is being checked.
+    println!(
+        // Inform user which container status is being checked.
         "Checking status for core environment container '{}'...",
         container_name
     );
 
     // 4. Inspect the target container.
-    match docker::state::inspect_container(&container_name).await { //
+    match docker::state::inspect_container(&container_name).await {
+        //
         Ok(details) => {
             // 5. If inspection succeeded, print the details.
             print_container_details(&container_name, &details);
         }
         Err(e) => {
             // Check if the error was specifically 'ContainerNotFound'.
-            if e.downcast_ref::<DevrsError>().is_some_and(|de| {
-                matches!(de, DevrsError::ContainerNotFound { .. })
-            }) {
+            if e.downcast_ref::<DevrsError>()
+                .is_some_and(|de| matches!(de, DevrsError::ContainerNotFound { .. }))
+            {
                 // Container doesn't exist - print a helpful message.
                 println!("\nStatus: Container '{}' not found.", container_name);
                 println!("Run 'devrs env shell' to create and start it, or 'devrs env build' if the image is missing.");
@@ -194,8 +199,10 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
     );
     // Format and print 'StartedAt' timestamp in local timezone.
     if let Some(started_at_str) = state.and_then(|s| s.started_at.as_deref()) {
-        match DateTime::parse_from_rfc3339(started_at_str) { // Parse RFC3339 timestamp.
-            Ok(dt) => println!( // Format into local timezone YYYY-MM-DD HH:MM:SS ZONE.
+        match DateTime::parse_from_rfc3339(started_at_str) {
+            // Parse RFC3339 timestamp.
+            Ok(dt) => println!(
+                // Format into local timezone YYYY-MM-DD HH:MM:SS ZONE.
                 "  Started At:  {}",
                 dt.with_timezone(&Local).format("%Y-%m-%d %H:%M:%S %Z")
             ),
@@ -235,7 +242,8 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
             .and_then(|ns| ns.networks.as_ref()) // Get Option<&HashMap<String, EndpointSettings>>
             .and_then(|nets| nets.values().next()) // Get details of the first network found.
             .and_then(|ep| ep.ip_address.as_deref()) // Get IP from endpoint settings.
-            .filter(|ip| !ip.is_empty()) // Ignore if empty.
+            .filter(|ip| !ip.is_empty())
+        // Ignore if empty.
         {
             println!("    IP Address:  {} (from bridge network)", ip); // Indicate source.
         } else {
@@ -253,7 +261,8 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
             println!("    Ports:");
             // Sort ports by container port number for consistent output.
             let mut sorted_ports: Vec<_> = port_map.iter().collect();
-            sorted_ports.sort_by_key(|(k, _)| { // k is "port/proto" string (e.g., "80/tcp")
+            sorted_ports.sort_by_key(|(k, _)| {
+                // k is "port/proto" string (e.g., "80/tcp")
                 k.split('/') // Split into port and proto.
                     .next() // Get the port part.
                     .unwrap_or("0") // Default to 0 if split fails.
@@ -275,7 +284,7 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
                                 "      - {} -> {}:{}",
                                 container_port_proto, // e.g., "80/tcp"
                                 binding.host_ip.as_deref().unwrap_or("0.0.0.0"), // Host IP (often 0.0.0.0).
-                                binding.host_port.as_deref().unwrap_or("<none>") // Host port.
+                                binding.host_port.as_deref().unwrap_or("<none>")  // Host port.
                             );
                         }
                     }
@@ -307,7 +316,7 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
                 let dest = mount.destination.as_deref().unwrap_or("N/A"); // Container path.
                 let src = mount.source.as_deref().unwrap_or("N/A"); // Host path or volume name.
                 let mode = mount.rw.map_or("?", |rw| if rw { "rw" } else { "ro" }); // Read/write mode.
-                // Type (e.g., BIND, VOLUME) - format the enum if present.
+                                                                                    // Type (e.g., BIND, VOLUME) - format the enum if present.
                 let typ = mount
                     .typ // Option<MountPointTypeEnum>
                     .as_ref()
@@ -324,7 +333,6 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
     println!("-----------------------------------");
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing and the formatting logic of `print_container_details`.
 // Testing `handle_status` requires mocking config and Docker API calls.
@@ -332,7 +340,10 @@ fn print_container_details(name: &str, details: &bollard::models::ContainerInspe
 mod tests {
     use super::*;
     // Import necessary structs from bollard models for creating test data.
-    use bollard::models::{ContainerInspectResponse, ContainerState, ContainerConfig, NetworkSettings, EndpointSettings, PortMap, PortBinding, MountPoint, MountPointTypeEnum};
+    use bollard::models::{
+        ContainerConfig, ContainerInspectResponse, ContainerState, EndpointSettings, MountPoint,
+        MountPointTypeEnum, NetworkSettings, PortBinding, PortMap,
+    };
     use std::collections::HashMap; // For network settings map.
 
     /// Test parsing default arguments (no flags).
@@ -371,7 +382,7 @@ mod tests {
             exit_code: Some(0), // Usually 0 if running
             error: Some("".to_string()),
             started_at: Some("2023-10-27T10:00:00.123456789Z".to_string()), // RFC3339 format
-            finished_at: Some("0001-01-01T00:00:00Z".to_string()), // Zero time if running
+            finished_at: Some("0001-01-01T00:00:00Z".to_string()),          // Zero time if running
             health: None, // Omit health details for simplicity
         });
 
@@ -383,29 +394,39 @@ mod tests {
 
         // Mock network settings with IP and ports
         let mut port_bindings = PortMap::new();
-        port_bindings.insert("80/tcp".to_string(), Some(vec![PortBinding {
-            host_ip: Some("0.0.0.0".to_string()),
-            host_port: Some("8080".to_string()),
-        }]));
-         port_bindings.insert("443/tcp".to_string(), None); // Exposed but not mapped
-         port_bindings.insert("53/udp".to_string(), Some(vec![PortBinding { // UDP example
-            host_ip: Some("127.0.0.1".to_string()),
-            host_port: Some("53".to_string()),
-        }]));
+        port_bindings.insert(
+            "80/tcp".to_string(),
+            Some(vec![PortBinding {
+                host_ip: Some("0.0.0.0".to_string()),
+                host_port: Some("8080".to_string()),
+            }]),
+        );
+        port_bindings.insert("443/tcp".to_string(), None); // Exposed but not mapped
+        port_bindings.insert(
+            "53/udp".to_string(),
+            Some(vec![PortBinding {
+                // UDP example
+                host_ip: Some("127.0.0.1".to_string()),
+                host_port: Some("53".to_string()),
+            }]),
+        );
 
         let mut networks = HashMap::new();
-        networks.insert("bridge".to_string(), EndpointSettings {
-             ip_address: Some("172.17.0.2".to_string()), // Example bridge IP
-             // Add other endpoint settings if needed
-             ..Default::default()
-         });
+        networks.insert(
+            "bridge".to_string(),
+            EndpointSettings {
+                ip_address: Some("172.17.0.2".to_string()), // Example bridge IP
+                // Add other endpoint settings if needed
+                ..Default::default()
+            },
+        );
 
         let mock_network = Some(NetworkSettings {
             // ip_address is often empty when using bridge network, test the fallback
             ip_address: Some("".to_string()),
             ports: Some(port_bindings),
             networks: Some(networks),
-             ..Default::default()
+            ..Default::default()
         });
 
         // Mock mount points
@@ -415,7 +436,7 @@ mod tests {
                 source: Some("/home/user/code".to_string()),
                 destination: Some("/app/code".to_string()),
                 mode: Some("rw".to_string()), // Mode string
-                rw: Some(true), // Boolean RW flag
+                rw: Some(true),               // Boolean RW flag
                 ..Default::default()
             },
             MountPoint {
@@ -423,11 +444,12 @@ mod tests {
                 name: Some("my-data-volume".to_string()), // Volume name
                 destination: Some("/data".to_string()),
                 driver: Some("local".to_string()),
-                 mode: Some("rw".to_string()),
+                mode: Some("rw".to_string()),
                 rw: Some(true),
                 ..Default::default()
             },
-             MountPoint { // Read-only example
+            MountPoint {
+                // Read-only example
                 typ: Some(MountPointTypeEnum::BIND),
                 source: Some("/etc/config.conf".to_string()),
                 destination: Some("/app/config.conf".to_string()),

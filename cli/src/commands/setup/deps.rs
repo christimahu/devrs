@@ -41,7 +41,7 @@ use crate::core::error::Result; // Use standard Result type
 use anyhow::{bail, Context}; // For concise error returns and context
 use clap::Parser; // For argument parsing
 use std::{
-    io::Write as IoWrite, // Needed for stdout().flush()
+    io::Write as IoWrite,      // Needed for stdout().flush()
     process::{Command, Stdio}, // Used for executing external commands to check existence
 };
 use tracing::{debug, error, info}; // Logging
@@ -90,7 +90,9 @@ pub async fn handle_deps(_args: DepsArgs) -> Result<()> {
         // Use print! without newline initially.
         print!("  - Checking for '{}'... ", dep);
         // Flush stdout to ensure the "Checking..." message appears before the result.
-        std::io::stdout().flush().context("Failed to flush stdout")?;
+        std::io::stdout()
+            .flush()
+            .context("Failed to flush stdout")?;
 
         // Perform the check and handle the result.
         match check_dependency_exists(dep).await {
@@ -209,11 +211,16 @@ mod tests {
     async fn test_check_dependency_exists_logic() {
         // Test for 'git', which is required and should generally be present.
         let git_exists = check_dependency_exists("git").await.unwrap_or(false);
-        assert!(git_exists, "'git' should be found in PATH for test execution");
+        assert!(
+            git_exists,
+            "'git' should be found in PATH for test execution"
+        );
 
         // Test for a command highly unlikely to exist.
         let non_existent_cmd = "nonexistent_devrs_test_command_98765";
-        let non_existent_exists = check_dependency_exists(non_existent_cmd).await.unwrap_or(true);
+        let non_existent_exists = check_dependency_exists(non_existent_cmd)
+            .await
+            .unwrap_or(true);
         assert!(
             !non_existent_exists,
             "'{}' should not be found",

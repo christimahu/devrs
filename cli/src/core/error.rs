@@ -4,7 +4,7 @@
 //! Author: Christi Mahu
 //! Repository: https://github.com/christimahu/devrs
 //!
-//! **DISCLAIMER:** This repository is in the early phases of being rewritten 
+//! **DISCLAIMER:** This repository is in the early phases of being rewritten
 //! and is not suitable for production development yet.
 //!
 //! ## Overview

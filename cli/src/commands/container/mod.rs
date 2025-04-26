@@ -107,7 +107,6 @@ enum ContainerCommand {
 
     // Note: The `Buildrun` subcommand was previously present but has been removed.
     // Users should now use separate `build` and `run` commands.
-
     /// Corresponds to `devrs container logs`.
     /// Fetches and displays logs from a specified running or stopped application container.
     /// Holds `logs::LogsArgs` for options like container name/ID, `--follow`, `--lines`.
@@ -212,7 +211,6 @@ pub async fn handle_container(args: ContainerArgs) -> Result<()> {
     Ok(())
 }
 
-
 // --- Unit Tests ---
 // These tests primarily verify that `clap` correctly parses the command-line arguments
 // for the `container` command group and its various subcommands. They ensure that
@@ -230,7 +228,7 @@ mod tests {
         let result =
             ContainerArgs::try_parse_from(["container", "build", "--file", "Dockerfile.prod"]);
         assert!(result.is_ok()); // Check if parsing succeeded.
-        // Verify the correct subcommand variant was matched.
+                                 // Verify the correct subcommand variant was matched.
         match result.unwrap().command {
             ContainerCommand::Build(_) => {} // Expected variant.
             _ => panic!("Incorrect subcommand parsed for 'build'"), // Fail if wrong variant.
