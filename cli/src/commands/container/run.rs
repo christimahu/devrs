@@ -305,7 +305,7 @@ mod tests {
     #[test]
     fn test_run_args_parsing() {
         // Simulate `devrs container run --image myimage:v2 --name my-instance -p 80:8000 --port 443:8443 -e VAR1=val1 --env VAR2=val2 --detach --rm override_cmd --arg1`
-        let args = RunArgs::try_parse_from(&[
+        let args = RunArgs::try_parse_from([
             "run", // Command name context for clap.
             "--image",
             "myimage:v2",
@@ -344,7 +344,7 @@ mod tests {
         // Note: In the current implementation, --image is optional if a default can be generated.
         // This test assumes --image is provided for simplicity. If --image were truly required,
         // `try_parse_from(&["run"])` would fail. Let's test with image provided.
-        let args = RunArgs::try_parse_from(&["run", "--image", "minimal:tag"]).unwrap();
+        let args = RunArgs::try_parse_from(["run", "--image", "minimal:tag"]).unwrap();
         // Verify explicitly provided image is parsed.
         assert_eq!(args.image, Some("minimal:tag".to_string()));
         // Verify other optional fields are None or empty/false by default.

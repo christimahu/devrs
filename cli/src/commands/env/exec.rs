@@ -243,7 +243,7 @@ mod tests {
     #[test]
     fn test_exec_args_parsing() {
         // Simulate `devrs env exec -it --user testuser -w /app ls -la`
-        let args = ExecArgs::try_parse_from(&[
+        let args = ExecArgs::try_parse_from([
             "exec", // Command name context for clap.
             "-it",  // Combined interactive and tty flags.
             "--user", "testuser", // User flag.
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn test_exec_args_parsing_with_name() {
         // Simulate `devrs env exec --name my-dev-container bash -c "echo hello"`
-        let args = ExecArgs::try_parse_from(&[
+        let args = ExecArgs::try_parse_from([
             "exec",
             "--name", // Specify container name.
             "my-dev-container",
@@ -297,7 +297,7 @@ mod tests {
     #[test]
     fn test_exec_args_requires_command() {
         // Simulate `devrs env exec -it` (missing the command)
-        let result = ExecArgs::try_parse_from(&["exec", "-it"]);
+        let result = ExecArgs::try_parse_from(["exec", "-it"]);
         // Expect an error because the command is required.
         assert!(result.is_err(), "Should fail without a command");
     }

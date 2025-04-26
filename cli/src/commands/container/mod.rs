@@ -228,7 +228,7 @@ mod tests {
         // Simulate `devrs container build --file Dockerfile.prod`
         // Note: The first "container" is for context, telling clap which top-level command we're testing.
         let result =
-            ContainerArgs::try_parse_from(&["container", "build", "--file", "Dockerfile.prod"]);
+            ContainerArgs::try_parse_from(["container", "build", "--file", "Dockerfile.prod"]);
         assert!(result.is_ok()); // Check if parsing succeeded.
         // Verify the correct subcommand variant was matched.
         match result.unwrap().command {
@@ -241,7 +241,7 @@ mod tests {
     #[test]
     fn test_parses_container_run() {
         // Simulate `devrs container run --image test`
-        let result = ContainerArgs::try_parse_from(&["container", "run", "--image", "test"]);
+        let result = ContainerArgs::try_parse_from(["container", "run", "--image", "test"]);
         assert!(result.is_ok());
         match result.unwrap().command {
             ContainerCommand::Run(_) => {} // Expected variant.
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn test_parses_container_rm() {
         // Simulate `devrs container rm my-container`
-        let result = ContainerArgs::try_parse_from(&["container", "rm", "my-container"]);
+        let result = ContainerArgs::try_parse_from(["container", "rm", "my-container"]);
         assert!(result.is_ok());
         match result.unwrap().command {
             ContainerCommand::Rm(_) => {} // Expected variant.
@@ -265,7 +265,7 @@ mod tests {
     #[test]
     fn test_rejects_container_buildrun() {
         // Simulate `devrs container buildrun --tag test`
-        let result = ContainerArgs::try_parse_from(&["container", "buildrun", "--tag", "test"]);
+        let result = ContainerArgs::try_parse_from(["container", "buildrun", "--tag", "test"]);
         // Expect parsing to fail because `Buildrun` is no longer a variant in `ContainerCommand`.
         assert!(
             result.is_err(),

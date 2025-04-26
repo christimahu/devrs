@@ -269,7 +269,7 @@ async fn find_available_port(
 /// ## Arguments
 ///
 /// * `config`: A reference to the `ServerConfig` containing settings like the serving directory,
-/// index file name, and CORS enablement flag.
+///   index file name, and CORS enablement flag.
 ///
 /// ## Returns
 ///

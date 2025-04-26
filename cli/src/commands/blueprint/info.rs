@@ -218,7 +218,8 @@ pub async fn handle_info(args: InfoArgs) -> Result<()> {
 ///     1. `String`: The extracted title (or a default).
 ///     2. `String`: The extracted description (or a default).
 ///     3. `Option<String>`: The extracted usage notes, if a relevant section was found.
-///   Returns `Err` if reading the file fails (other than not found).
+///
+/// Returns `Err` if reading the file fails (other than not found).
 fn read_and_parse_readme(readme_path: &Path) -> Result<(String, String, Option<String>)> {
     // Check if the README file exists and is a file.
     if !readme_path.is_file() {
@@ -528,14 +529,14 @@ mod tests {
     #[test]
     fn test_info_args_parsing() {
         // Test parsing a valid command with the required blueprint name.
-        let args = InfoArgs::try_parse_from(&["info", "my-blueprint"]).unwrap();
+        let args = InfoArgs::try_parse_from(["info", "my-blueprint"]).unwrap();
         assert_eq!(args.blueprint_name, "my-blueprint");
     }
 
     #[test]
     fn test_info_args_requires_name() {
         // Test that parsing fails if the required blueprint name is missing.
-        let result = InfoArgs::try_parse_from(&["info"]);
+        let result = InfoArgs::try_parse_from(["info"]);
         assert!(result.is_err(), "Should fail without blueprint name");
     }
 

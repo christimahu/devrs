@@ -64,7 +64,7 @@ use tracing::{info, warn}; // Logging utilities
 ///
 /// * `source` - A `&Path` reference to the source directory to copy from. Must exist.
 /// * `target` - A `&Path` reference to the target directory or path. If it exists,
-///              its contents may be overwritten. Parent directories will be created if needed.
+///   its contents may be overwritten. Parent directories will be created if needed.
 ///
 /// # Returns
 ///

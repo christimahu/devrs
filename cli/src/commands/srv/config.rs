@@ -60,7 +60,7 @@ use anyhow::Context;
 use clap::Parser;
 use serde::Deserialize;
 use std::net::IpAddr;
-use std::{env, fs, path::PathBuf};
+use std::{env, fs, path::{Path, PathBuf}};
 use tracing::{debug, info, warn};
 
 /// The expected name for the server-specific configuration file.
@@ -190,7 +190,7 @@ pub async fn load_and_merge_config(args: SrvArgs) -> Result<ServerConfig> {
     // Start with configuration directly derived from command-line arguments.
     let mut effective_config = ServerConfig::from_args(&args);
     let initial_dir_from_args = args.directory.clone();
-    let cli_defaults = SrvArgs::parse_from(&[""]); // Get defaults for comparison
+    let cli_defaults = SrvArgs::parse_from([""]); // Get defaults for comparison
 
     // Resolve the potential location of the config file based on the input directory.
     let config_search_dir = if initial_dir_from_args.is_absolute() {
@@ -291,7 +291,8 @@ impl Default for ServerConfig {
 ///     - `Ok(Some(config))` if the file was found and parsed successfully.
 ///     - `Ok(None)` if the file was not found.
 ///     - `Err(_)` if the file was found but could not be read or parsed (e.g., invalid TOML, permissions issue).
-fn load_config_from_dir(search_dir: &PathBuf) -> Result<Option<ServerConfig>> {
+fn load_config_from_dir(search_dir: &Path) -> Result<Option<ServerConfig>> {
+    // ... function body remains the same ...
     let config_path = search_dir.join(CONFIG_FILE_NAME);
 
     // Check if the configuration file exists and is actually a file.

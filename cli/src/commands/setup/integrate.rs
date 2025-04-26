@@ -200,7 +200,7 @@ mod tests {
     /// Test argument parsing (currently no arguments).
     #[test]
     fn test_integrate_args_parsing() {
-        let args = IntegrateArgs::try_parse_from(&["integrate"]).unwrap();
+        let args = IntegrateArgs::try_parse_from(["integrate"]).unwrap();
         // No arguments to assert currently. Test ensures parsing doesn't fail.
         let _ = args; // Use args to prevent unused variable warning
     }

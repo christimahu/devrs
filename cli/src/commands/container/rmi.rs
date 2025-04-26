@@ -136,7 +136,7 @@ pub async fn handle_rmi(args: RmiArgs) -> Result<()> {
                 // Check if the error specifically indicates the image was not found.
                 Err(e)
                     if e.downcast_ref::<crate::core::error::DevrsError>() // Safely attempt to downcast anyhow::Error.
-                        .map_or(false, |de| { // Check the specific DevrsError variant if downcast succeeds.
+                        .is_some_and(|de| { // Check the specific DevrsError variant if downcast succeeds.
                             matches!(de, crate::core::error::DevrsError::ImageNotFound { .. })
                         }) =>
                 {
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_rmi_args_parsing() {
         // Simulate `devrs container rmi img1:latest img2:v1.0 --force`
-        let args = RmiArgs::try_parse_from(&[
+        let args = RmiArgs::try_parse_from([
             "rmi",         // Command name context for clap.
             "img1:latest", // First positional argument.
             "img2:v1.0",   // Second positional argument.
@@ -231,7 +231,7 @@ mod tests {
     #[test]
     fn test_rmi_args_requires_name() {
         // Simulate `devrs container rmi` (with no image names)
-        let result = RmiArgs::try_parse_from(&["rmi"]);
+        let result = RmiArgs::try_parse_from(["rmi"]);
         // Expect an error because at least one image name/ID is required.
         assert!(result.is_err(), "Should fail without image names");
     }

@@ -241,38 +241,38 @@ mod tests {
 
     #[test]
     fn test_parses_setup_default_to_all() {
-        let args = SetupArgs::try_parse_from(&["setup"]).unwrap();
+        let args = SetupArgs::try_parse_from(["setup"]).unwrap();
         assert!(args.command.is_none());
     }
 
     #[test]
     fn test_parses_setup_all() {
-        let args = SetupArgs::try_parse_from(&["setup", "all"]).unwrap();
+        let args = SetupArgs::try_parse_from(["setup", "all"]).unwrap();
         assert!(matches!(args.command, Some(SetupCommand::All(_))));
     }
 
     #[test]
     fn test_parses_setup_config() { // Test for new subcommand
-        let args = SetupArgs::try_parse_from(&["setup", "config"]).unwrap();
+        let args = SetupArgs::try_parse_from(["setup", "config"]).unwrap();
         assert!(matches!(args.command, Some(SetupCommand::Config(_))));
     }
 
     #[test]
     fn test_parses_setup_deps() {
-        let args = SetupArgs::try_parse_from(&["setup", "deps"]).unwrap();
+        let args = SetupArgs::try_parse_from(["setup", "deps"]).unwrap();
         assert!(matches!(args.command, Some(SetupCommand::Deps(_))));
     }
 
     #[test]
     fn test_parses_setup_integrate() {
-        let args = SetupArgs::try_parse_from(&["setup", "integrate"]).unwrap();
+        let args = SetupArgs::try_parse_from(["setup", "integrate"]).unwrap();
         assert!(matches!(args.command, Some(SetupCommand::Integrate(_))));
     }
 
     #[test]
     fn test_parses_setup_nvim() {
         let args =
-            SetupArgs::try_parse_from(&["setup", "nvim", "--force", "--skip-plugins"]).unwrap();
+            SetupArgs::try_parse_from(["setup", "nvim", "--force", "--skip-plugins"]).unwrap();
         assert!(matches!(args.command, Some(SetupCommand::Nvim(_))));
         if let Some(SetupCommand::Nvim(nvim_args)) = args.command {
             assert!(nvim_args.force);

@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn test_create_args_parsing() {
         // Test basic required args
-        let args = CreateArgs::try_parse_from(&["create", "--lang", "rust", "my-project"]).unwrap();
+        let args = CreateArgs::try_parse_from(["create", "--lang", "rust", "my-project"]).unwrap();
         assert_eq!(args.lang, "rust");
         assert_eq!(args.project_name, "my-project");
         assert!(args.output.is_none());
@@ -547,7 +547,7 @@ mod tests {
         assert!(args.var.is_empty());
 
         // Test all arguments
-        let args_full = CreateArgs::try_parse_from(&[
+        let args_full = CreateArgs::try_parse_from([
             "create",
             "--lang",
             "go",
@@ -578,9 +578,9 @@ mod tests {
     #[test]
     fn test_create_args_requires_lang_and_name() {
         // Missing --lang
-        assert!(CreateArgs::try_parse_from(&["create", "my-project"]).is_err());
+        assert!(CreateArgs::try_parse_from(["create", "my-project"]).is_err());
         // Missing project_name
-        assert!(CreateArgs::try_parse_from(&["create", "--lang", "rust"]).is_err());
+        assert!(CreateArgs::try_parse_from(["create", "--lang", "rust"]).is_err());
     }
 
     // Test the helper function for parsing `KEY=VALUE` strings.

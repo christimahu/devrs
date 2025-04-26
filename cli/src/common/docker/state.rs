@@ -210,7 +210,7 @@ pub async fn container_running(name_or_id: &str) -> Result<bool> {
             // Check the state field within the details.
             let is_running = details
                 .state // Option<ContainerState>
-                .map_or(false, |s| {
+                .is_some_and(|s| {
                     // Check if the status enum is Some(RUNNING).
                     s.status == Some(ContainerStateStatusEnum::RUNNING)
                 });
@@ -219,7 +219,7 @@ pub async fn container_running(name_or_id: &str) -> Result<bool> {
         }
         // Inspection failed. Check if it was because the container wasn't found.
         Err(e)
-            if e.downcast_ref::<DevrsError>().map_or(false, |err| {
+            if e.downcast_ref::<DevrsError>().is_some_and(|err| {
                 // Use downcast_ref for safe error type checking.
                 matches!(err, DevrsError::ContainerNotFound { .. })
             }) =>

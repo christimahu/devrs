@@ -132,7 +132,7 @@ pub async fn handle_rm(args: RmArgs) -> Result<()> {
                 // Check if the error indicates the container was not found.
                 Err(e)
                     if e.downcast_ref::<crate::core::error::DevrsError>() // Safely attempt to downcast the anyhow::Error
-                        .map_or(false, |de| { // If downcast succeeds, check the DevrsError variant.
+                        .is_some_and(|de| { // If downcast succeeds, check the DevrsError variant.
                             // Match specifically against the ContainerNotFound variant.
                             matches!(de, crate::core::error::DevrsError::ContainerNotFound { .. })
                         }) =>
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn test_rm_args_parsing() {
         // Simulate `devrs container rm c1 c2 -f`
-        let args = RmArgs::try_parse_from(&[
+        let args = RmArgs::try_parse_from([
             "rm", // Command name context for clap
             "c1", // First positional argument
             "c2", // Second positional argument
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn test_rm_args_requires_name() {
         // Simulate `devrs container rm` (with no names)
-        let result = RmArgs::try_parse_from(&["rm"]);
+        let result = RmArgs::try_parse_from(["rm"]);
         // Expect an error because at least one name/ID is required.
         assert!(result.is_err(), "Should fail without container names");
     }

@@ -365,7 +365,7 @@ mod tests {
     #[test]
     fn test_nvim_args_parsing() {
         // Test default arguments.
-        let args_default = NvimArgs::try_parse_from(&["nvim"]).unwrap();
+        let args_default = NvimArgs::try_parse_from(["nvim"]).unwrap();
         assert!(!args_default.force, "Default force should be false");
         assert!(
             !args_default.skip_plugins,
@@ -374,7 +374,7 @@ mod tests {
 
         // Test parsing with flags enabled.
         let args_flags =
-            NvimArgs::try_parse_from(&["nvim", "--force", "--skip-plugins"]).unwrap();
+            NvimArgs::try_parse_from(["nvim", "--force", "--skip-plugins"]).unwrap();
         assert!(args_flags.force, "force should be true");
         assert!(
             args_flags.skip_plugins,
@@ -382,7 +382,7 @@ mod tests {
         );
 
         // Test parsing with short flag -f for force.
-        let args_force_only = NvimArgs::try_parse_from(&["nvim", "-f"]).unwrap();
+        let args_force_only = NvimArgs::try_parse_from(["nvim", "-f"]).unwrap();
         assert!(args_force_only.force, "force should be true via -f");
         assert!(
             !args_force_only.skip_plugins,

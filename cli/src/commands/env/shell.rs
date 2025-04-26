@@ -181,11 +181,11 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
     if needs_creation {
         info!("Container '{}' was newly created.", container_name);
         if using_defaults {
-            // Inform user about the default image and mount used.
             println!(
-                "Created container '{}' using default image '{}'.",
+                "Created container '{}' using default image '{}:{}'.", // Combine format string
                 container_name,
-                format!("{}:{}", cfg.core_env.image_name, cfg.core_env.image_tag) // Show image used.
+                cfg.core_env.image_name, // Pass args directly
+                cfg.core_env.image_tag   // Pass args directly
             );
             println!("Current host directory mounted to /code inside the container.");
             println!("Default working directory set to /code.");
@@ -324,12 +324,12 @@ mod tests {
     #[test]
     fn test_shell_args_parsing() {
         // Simulate `devrs env shell` (no args)
-        let args_default = ShellArgs::try_parse_from(&["shell"]).unwrap();
+        let args_default = ShellArgs::try_parse_from(["shell"]).unwrap();
         assert!(args_default.name.is_none()); // Name should be None by default.
 
         // Simulate `devrs env shell --name custom-core-env`
         let args_named =
-            ShellArgs::try_parse_from(&["shell", "--name", "custom-core-env"]).unwrap();
+            ShellArgs::try_parse_from(["shell", "--name", "custom-core-env"]).unwrap();
         // Name should be parsed correctly.
         assert_eq!(args_named.name, Some("custom-core-env".to_string()));
     }

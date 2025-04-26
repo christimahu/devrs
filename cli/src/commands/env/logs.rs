@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn test_logs_args_parsing_defaults() {
         // Simulate `devrs env logs`
-        let args = LogsArgs::try_parse_from(&["logs"]).unwrap(); // Use "logs" as command name context.
+        let args = LogsArgs::try_parse_from(["logs"]).unwrap(); // Use "logs" as command name context.
         // Verify default values.
         assert!(!args.follow); // Default is false.
         assert_eq!(args.lines, "100"); // Default is "100".
@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn test_logs_args_parsing_with_options() {
         // Simulate `devrs env logs --follow -n 50 --name my-dev-container`
-        let args = LogsArgs::try_parse_from(&[
+        let args = LogsArgs::try_parse_from([
             "logs",
             "--follow", // Follow flag.
             "-n", // Short lines flag.
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn test_logs_args_parsing_lines_all() {
         // Simulate `devrs env logs --lines all`
-        let args = LogsArgs::try_parse_from(&["logs", "--lines", "all"]).unwrap();
+        let args = LogsArgs::try_parse_from(["logs", "--lines", "all"]).unwrap();
         assert_eq!(args.lines, "all");
         // Check other defaults.
         assert!(!args.follow);

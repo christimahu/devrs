@@ -262,7 +262,7 @@ pub async fn remove_container(name_or_id: &str, force: bool) -> Result<()> {
             }
             // Check if the error during the running check was specifically "Not Found".
             Err(e)
-                if e.downcast_ref::<DevrsError>().map_or(false, |err| {
+                if e.downcast_ref::<DevrsError>().is_some_and(|err| {
                     matches!(err, DevrsError::ContainerNotFound { .. })
                 }) =>
             {

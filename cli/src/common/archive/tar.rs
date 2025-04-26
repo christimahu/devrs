@@ -70,7 +70,7 @@ use std::path::Path; // Filesystem path type
 /// ## Arguments
 ///
 /// * `context_path` - A `&Path` reference to the directory whose contents should be archived.
-///                    This directory *must* exist.
+///   This directory *must* exist.
 ///
 /// ## Returns
 ///

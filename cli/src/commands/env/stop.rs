@@ -133,7 +133,7 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
         // Handle specific errors gracefully.
         Err(e) => {
             // Check if the error was 'ContainerNotFound'.
-            if e.downcast_ref::<DevrsError>().map_or(false, |de| {
+            if e.downcast_ref::<DevrsError>().is_some_and(|de| {
                 matches!(de, DevrsError::ContainerNotFound { .. })
             }) {
                 // If not found, log warning and inform user, but return Ok for the command itself.
@@ -171,13 +171,13 @@ mod tests {
     #[test]
     fn test_stop_args_parsing() {
         // Simulate `devrs env stop --name custom-env -t 5`
-        let args_named = StopArgs::try_parse_from(&["stop", "--name", "custom-env", "-t", "5"])
+        let args_named = StopArgs::try_parse_from(["stop", "--name", "custom-env", "-t", "5"])
             .expect("Parsing named args failed");
         assert_eq!(args_named.name, Some("custom-env".to_string())); // Check name.
         assert_eq!(args_named.time, 5); // Check custom timeout.
 
          // Simulate `devrs env stop` (no optional args)
-        let args_default = StopArgs::try_parse_from(&["stop"]).expect("Parsing default args failed");
+        let args_default = StopArgs::try_parse_from(["stop"]).expect("Parsing default args failed");
         assert!(args_default.name.is_none()); // Name should be None.
         assert_eq!(args_default.time, 10); // Check default timeout.
     }

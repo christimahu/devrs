@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn test_parses_blueprint_list() {
         // Simulate command-line input: `devrs blueprint list`
-        let result = BlueprintArgs::try_parse_from(&["blueprint", "list"]);
+        let result = BlueprintArgs::try_parse_from(["blueprint", "list"]);
         // Expect parsing to succeed.
         assert!(result.is_ok());
         // Verify that the parsed command is indeed the `List` variant.
@@ -178,7 +178,7 @@ mod tests {
     fn test_parses_blueprint_create() {
          // Simulate command-line input: `devrs blueprint create --lang rust my-project`
         let result =
-            BlueprintArgs::try_parse_from(&["blueprint", "create", "--lang", "rust", "my-project"]);
+            BlueprintArgs::try_parse_from(["blueprint", "create", "--lang", "rust", "my-project"]);
         // Expect parsing to succeed.
         assert!(result.is_ok());
         // Verify that the parsed command is the `Create` variant.
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn test_parses_blueprint_info() {
         // Simulate command-line input: `devrs blueprint info rust`
-        let result = BlueprintArgs::try_parse_from(&["blueprint", "info", "rust"]);
+        let result = BlueprintArgs::try_parse_from(["blueprint", "info", "rust"]);
         // Expect parsing to succeed.
         assert!(result.is_ok());
          // Verify that the parsed command is the `Info` variant.
@@ -231,7 +231,7 @@ mod tests {
         //    This step is complex without a mocking library and is omitted here.
 
         // --- Test list command routing (conceptual) ---
-        let list_args = BlueprintArgs::try_parse_from(&["blueprint", "list"]).unwrap();
+        let list_args = BlueprintArgs::try_parse_from(["blueprint", "list"]).unwrap();
         // Expect handle_blueprint to call list::handle_list.
         // Without mocking, this will likely fail due to the real config loading.
         assert!(
@@ -240,7 +240,7 @@ mod tests {
         );
 
         // --- Test info command routing (conceptual) ---
-        let info_args = BlueprintArgs::try_parse_from(&["blueprint", "info", "rust"]).unwrap();
+        let info_args = BlueprintArgs::try_parse_from(["blueprint", "info", "rust"]).unwrap();
          // Expect handle_blueprint to call info::handle_info.
         assert!(
             handle_blueprint(info_args).await.is_err(),
@@ -248,7 +248,7 @@ mod tests {
         );
 
         // --- Test create command routing (conceptual) ---
-        let create_args = BlueprintArgs::try_parse_from(&[
+        let create_args = BlueprintArgs::try_parse_from([
             "blueprint",
             "create",
             "--lang",

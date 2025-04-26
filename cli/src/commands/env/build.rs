@@ -278,13 +278,13 @@ mod tests {
     #[test]
     fn test_build_args_parsing() {
         // Test default args
-        let args_default = BuildArgs::try_parse_from(&["build"]).unwrap();
+        let args_default = BuildArgs::try_parse_from(["build"]).unwrap();
         assert!(!args_default.no_cache);
         assert!(args_default.stage.is_none());
 
         // Test flags enabled
         let args_flags =
-            BuildArgs::try_parse_from(&["build", "--no-cache", "--stage", "builder"]).unwrap();
+            BuildArgs::try_parse_from(["build", "--no-cache", "--stage", "builder"]).unwrap();
         assert!(args_flags.no_cache);
         assert_eq!(args_flags.stage, Some("builder".to_string()));
     }

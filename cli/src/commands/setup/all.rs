@@ -160,11 +160,11 @@ mod tests {
 
     #[test]
     fn test_all_args_parsing() {
-        let args_default = AllArgs::try_parse_from(&["all"]).unwrap();
+        let args_default = AllArgs::try_parse_from(["all"]).unwrap();
         assert!(!args_default.force_nvim);
         assert!(!args_default.skip_nvim_plugins);
 
-        let args_flags = AllArgs::try_parse_from(&[
+        let args_flags = AllArgs::try_parse_from([
             "all",
             "--force-nvim",
             "--skip-nvim-plugins",
@@ -173,7 +173,7 @@ mod tests {
         assert!(args_flags.force_nvim);
         assert!(args_flags.skip_nvim_plugins);
 
-        let args_short_force = AllArgs::try_parse_from(&["all", "-f"]).unwrap();
+        let args_short_force = AllArgs::try_parse_from(["all", "-f"]).unwrap();
         assert!(args_short_force.force_nvim);
         assert!(!args_short_force.skip_nvim_plugins);
     }

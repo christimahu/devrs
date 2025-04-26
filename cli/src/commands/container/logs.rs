@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn test_logs_args_parsing() {
         // Simulate `devrs container logs my-app-container -f --lines 500`
-        let args = LogsArgs::try_parse_from(&["logs", "my-app-container", "-f", "--lines", "500"])
+        let args = LogsArgs::try_parse_from(["logs", "my-app-container", "-f", "--lines", "500"])
             .unwrap();
         // Verify the required name was parsed correctly.
         assert_eq!(args.container_name_or_id, "my-app-container");
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_logs_args_requires_name() {
         // Simulate `devrs container logs` (without the container name)
-        let result = LogsArgs::try_parse_from(&["logs"]);
+        let result = LogsArgs::try_parse_from(["logs"]);
         // Expect an error because the container name is required.
         assert!(result.is_err(), "Should fail without container name");
     }

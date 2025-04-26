@@ -249,7 +249,7 @@ mod tests {
     fn test_shell_args_parsing_with_command() {
         // Simulate `devrs container shell myimage:debug python -V`
         // Note: Force flag was removed, so it's not included here.
-        let args = ShellArgs::try_parse_from(&[
+        let args = ShellArgs::try_parse_from([
             "shell",         // Command name context for clap.
             "myimage:debug", // Required image name.
             "--", // Add separator before trailing command args
@@ -268,7 +268,7 @@ mod tests {
     #[test]
     fn test_shell_args_parsing_default_shell() {
          // Simulate `devrs container shell myimage:debug`
-        let args = ShellArgs::try_parse_from(&[
+        let args = ShellArgs::try_parse_from([
             "shell",         // Command name context.
             "myimage:debug", // Required image name.
                              // No override command provided.
@@ -286,7 +286,7 @@ mod tests {
     #[test]
     fn test_shell_args_requires_name() {
         // Simulate `devrs container shell` (missing image name)
-        let result = ShellArgs::try_parse_from(&["shell"]);
+        let result = ShellArgs::try_parse_from(["shell"]);
         // Expect an error because the image name is required.
         assert!(result.is_err(), "Should fail without image name");
     }

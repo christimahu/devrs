@@ -332,12 +332,11 @@ fn print_blueprint_table(blueprints: &[(String, String)], bp_dir: &Path) {
     // --- Calculate Column Width ---
     // Determine the required width for the "Name" column based on the longest blueprint name.
     let name_width = blueprints
-        .iter()
-        .map(|(name, _)| name.len()) // Get length of each name.
-        .max() // Find the maximum length.
-        .unwrap_or(10) // Use 10 as a fallback width if list is empty (defensive).
-        .max(10) // Ensure a minimum width of 10 characters.
-        .min(30); // Cap the width at 30 characters to avoid overly wide tables.
+    .iter()
+    .map(|(name, _)| name.len()) // Get length of each name.
+    .max() // Find the maximum length.
+    .unwrap_or(10) // Use 10 as a fallback width if list is empty (defensive).
+    .clamp(10, 30); // Ensure minimum 10, maximum 30.
 
     // --- Print Table Header ---
     println!("\nAvailable Blueprints in '{}':\n", bp_dir.display());

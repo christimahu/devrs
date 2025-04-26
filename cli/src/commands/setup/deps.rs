@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn test_deps_args_parsing() {
         // Try parsing the command "deps".
-        let args = DepsArgs::try_parse_from(&["deps"]).unwrap();
+        let args = DepsArgs::try_parse_from(["deps"]).unwrap();
         // Assertions can be added here if arguments are introduced later.
         let _ = args; // Use args to prevent unused variable warning
     }

@@ -127,7 +127,7 @@ pub async fn handle_prune(args: PruneArgs) -> Result<()> {
         .into_iter()
         .filter(|c| {
             // Check if any name matches the prefix.
-            let name_matches = c.names.as_ref().map_or(false, |names| {
+            let name_matches = c.names.as_ref().is_some_and(|names| {
                 names
                     .iter()
                     .any(|n| n.trim_start_matches('/').starts_with(&core_env_name_prefix))
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn test_prune_args_parsing() {
         // Simulate `devrs env prune`
-        let args = PruneArgs::try_parse_from(&["prune"]).unwrap();
+        let args = PruneArgs::try_parse_from(["prune"]).unwrap();
         // Default value for `force` should be false.
         assert!(!args.force);
     }
@@ -253,11 +253,11 @@ mod tests {
     #[test]
     fn test_prune_args_parsing_force() {
          // Simulate `devrs env prune --force`
-        let args_force = PruneArgs::try_parse_from(&["prune", "--force"]).unwrap();
+        let args_force = PruneArgs::try_parse_from(["prune", "--force"]).unwrap();
         // The `force` flag should be true.
         assert!(args_force.force);
          // Simulate `devrs env prune -f`
-         let args_force_short = PruneArgs::try_parse_from(&["prune", "-f"]).unwrap();
+         let args_force_short = PruneArgs::try_parse_from(["prune", "-f"]).unwrap();
          assert!(args_force_short.force);
     }
 

@@ -114,11 +114,11 @@ pub async fn handle_status(args: StatusArgs) -> Result<()> {
         .filter(|c| { // Keep container 'c' if the closure returns true.
             // Check if *any* of the container's names match the exclusion pattern.
             !c.names.as_ref() // Get Option<&Vec<String>> for names.
-                .map_or(false, |names| { // If names exist...
+                .is_some_and(|names| { // If names exist...
                     names.iter().any(|name| { // Check if any name matches...
                         let clean_name = name.trim_start_matches('/'); // Docker often prefixes names with '/'.
                         // Check if the cleaned name starts with the core env pattern prefix.
-                        clean_name.starts_with(&core_env_name_pattern.trim_end_matches('*'))
+                        clean_name.starts_with(core_env_name_pattern.trim_end_matches('*'))
                     })
                 })
         })
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn test_status_args_parsing() {
         // Simulate `devrs container status`
-        let args = StatusArgs::try_parse_from(&["status"]).unwrap();
+        let args = StatusArgs::try_parse_from(["status"]).unwrap();
         // Default value for `all` should be false.
         assert!(!args.all);
     }
@@ -259,7 +259,7 @@ mod tests {
     #[test]
     fn test_status_args_parsing_all() {
          // Simulate `devrs container status -a`
-        let args_all = StatusArgs::try_parse_from(&["status", "-a"]).unwrap();
+        let args_all = StatusArgs::try_parse_from(["status", "-a"]).unwrap();
         // The `all` flag should be true.
         assert!(args_all.all);
     }

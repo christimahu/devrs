@@ -160,7 +160,7 @@ pub async fn handle_rebuild(args: RebuildArgs) -> Result<()> {
         // Handle container not found specifically (it's okay for rebuild).
         Err(e)
             if e.downcast_ref::<crate::core::error::DevrsError>()
-                .map_or(false, |de| {
+                .is_some_and(|de| {
                     matches!(de, crate::core::error::DevrsError::ContainerNotFound { .. })
                 }) =>
         {
@@ -184,7 +184,7 @@ pub async fn handle_rebuild(args: RebuildArgs) -> Result<()> {
          // Handle container not found specifically (it's okay for rebuild).
         Err(e)
             if e.downcast_ref::<crate::core::error::DevrsError>()
-                .map_or(false, |de| {
+                .is_some_and(|de| {
                     matches!(de, crate::core::error::DevrsError::ContainerNotFound { .. })
                 }) =>
         {
@@ -280,7 +280,7 @@ mod tests {
     #[test]
     fn test_rebuild_args_parsing() {
         // Simulate `devrs env rebuild --name my-env --no-cache --with-plugins`
-        let args = RebuildArgs::try_parse_from(&[
+        let args = RebuildArgs::try_parse_from([
             "rebuild", // Command name context for clap.
             "--name",
             "my-env",
@@ -299,7 +299,7 @@ mod tests {
      #[test]
     fn test_rebuild_args_parsing_defaults() {
          // Simulate `devrs env rebuild`
-         let args = RebuildArgs::try_parse_from(&["rebuild"]).unwrap();
+         let args = RebuildArgs::try_parse_from(["rebuild"]).unwrap();
          // Verify default values.
          assert!(args.name.is_none());
          assert!(!args.no_cache);

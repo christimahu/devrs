@@ -127,7 +127,7 @@ pub async fn handle_status(args: StatusArgs) -> Result<()> {
         }
         Err(e) => {
             // Check if the error was specifically 'ContainerNotFound'.
-            if e.downcast_ref::<DevrsError>().map_or(false, |de| {
+            if e.downcast_ref::<DevrsError>().is_some_and(|de| {
                 matches!(de, DevrsError::ContainerNotFound { .. })
             }) {
                 // Container doesn't exist - print a helpful message.
@@ -339,7 +339,7 @@ mod tests {
     #[test]
     fn test_status_args_parsing() {
         // Simulate `devrs env status`
-        let args = StatusArgs::try_parse_from(&["status"]).unwrap();
+        let args = StatusArgs::try_parse_from(["status"]).unwrap();
         // The optional `--name` should be None by default.
         assert!(args.name.is_none());
     }
@@ -348,7 +348,7 @@ mod tests {
     #[test]
     fn test_status_args_parsing_with_name() {
         // Simulate `devrs env status --name custom-env`
-        let args_named = StatusArgs::try_parse_from(&["status", "--name", "custom-env"]).unwrap();
+        let args_named = StatusArgs::try_parse_from(["status", "--name", "custom-env"]).unwrap();
         // The name should be parsed correctly.
         assert_eq!(args_named.name, Some("custom-env".to_string()));
     }
