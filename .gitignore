@@ -28,7 +28,10 @@ Thumbs.db
 
 # === DevRS Specific ===
 # Ignore environment files if they contain secrets
-# *.env
+*.env
+
+# Ignore the active/customized DevRS config file in presets
+presets/config.toml
 
 # Ignore logs
 *.log

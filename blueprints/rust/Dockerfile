@@ -21,7 +21,7 @@ RUN addgroup -S appuser && \
 WORKDIR /app
 
 # Copy pre-built binary from local build
-COPY ./target/debug/chatbot /app/chatbot
+COPY ./target/release/chatbot /app/chatbot
 
 # Switch to non-root user for better security
 USER appuser
