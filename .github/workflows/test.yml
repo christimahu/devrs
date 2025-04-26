@@ -31,12 +31,10 @@ jobs:
       - name: Install Neovim, Git, and Docker
         run: |
           sudo apt-get update -y
-          # Install git just in case checkout didn't provide it or test needs it explicitly
+          # Remove conflicting package if present
+          sudo apt-get remove -y containerd
+          # Install required packages
           sudo apt-get install -y git neovim docker.io
-          # Optional: Add current user to docker group (might be needed depending on test execution context)
-          # sudo usermod -aG docker $USER
-          # Optional: Ensure docker service is running (might be needed)
-          # sudo systemctl status docker || sudo systemctl start docker
 
       # --- End Added Section ---
 
