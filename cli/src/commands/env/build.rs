@@ -11,7 +11,7 @@
 //!
 //! This module implements the `devrs env build` command. Its primary responsibility
 //! is to build (or rebuild) the **core development environment Docker image**.
-//! This image, defined by the main `Dockerfile` in the repository root, contains
+//! This image, defined by `presets/Dockerfile.devrs` within the repository, contains
 //! all the common tools and dependencies needed for development across various projects
 //! managed with DevRS.
 //!
@@ -19,17 +19,17 @@
 //!
 //! The command flow follows these steps:
 //! 1. Parse command-line arguments (`BuildArgs`) using `clap`, specifically the `--no-cache` and `--stage` flags.
-//! 2. Attempt to load the DevRS configuration (`core::config`) to retrieve the intended `image_name` and `image_tag` for the core environment. Fallback to hardcoded defaults ("devrs-env", "latest") if configuration loading fails or specific values are missing.
-//! 3. Construct the full image tag (e.g., "my-custom-env:beta", "devrs-env:latest"). Validate that the resulting name and tag are not empty.
-//! 4. Define the expected location of the `Dockerfile` (repository root) and the build context (repository root, represented as ".").
-//! 5. Validate that the `Dockerfile` exists at the expected path. **Assumption:** This command is run from the DevRS repository root directory.
-//! 6. Call the shared Docker utility function `common::docker::build_image` with the final image tag, Dockerfile path, context path, and cache options.
+//! 2. Attempt to load the DevRS configuration (`core::config`) to retrieve the intended `image_name` and `image_tag` for the core environment. Fallback to hardcoded defaults ("devrs-core-env", "latest") if configuration loading fails or specific values are missing. Note: The default image name was changed from "devrs-env" to "devrs-core-env" for clarity.
+//! 3. Construct the full image tag (e.g., "my-custom-env:beta", "devrs-core-env:latest"). Validate that the resulting name and tag are not empty.
+//! 4. Define the expected location of the Dockerfile (`presets/Dockerfile.devrs`) relative to the repository root and the build context (repository root, represented as ".").
+//! 5. Validate that the `Dockerfile.devrs` exists at the expected path (`presets/Dockerfile.devrs`). **Assumption:** This command is run from the DevRS repository root directory.
+//! 6. Call the shared Docker utility function `common::docker::build_image` with the final image tag, relative Dockerfile path, context path ("."), and cache options.
 //! 7. Stream build output from Docker to the console.
 //! 8. Report final success or failure.
 //!
 //! ## Examples
 //!
-//! Usage examples:
+//! Usage examples (run from the repository root):
 //!
 //! ```bash
 //! # Build the core environment image using defaults and cache
@@ -38,25 +38,38 @@
 //! # Build without using Docker's layer cache
 //! devrs env build --no-cache
 //!
-//! # Build only up to a specific stage in the Dockerfile (NOTE: Currently informational only)
-//! devrs env build --stage user-setup
+//! # Build only up to a specific stage (Note: Currently informational only)
+//! devrs env build --stage base-tools
 //! ```
 //!
 //! The command builds the single, shared core development environment image, not project-specific application images (which are handled by `devrs container build`).
 //!
-use crate::common::docker; // Access shared Docker utilities (specifically build_image).
-use crate::core::config; // Access configuration loading.
-use crate::core::error::Result; // Standard Result type for error handling.
-use anyhow::Context; // For adding context to errors.
+use crate::{
+    common::docker, // Access shared Docker utilities (specifically build_image).
+    core::{config, error::Result}, // Standard Result type for error handling & config loading.
+};
+use anyhow::{bail, Context}; // For adding context to errors & early returns.
 use clap::Parser; // For parsing command-line arguments.
 use std::path::Path; // For working with filesystem paths (Dockerfile location).
 use tracing::{debug, info, warn}; // Logging framework utilities.
+
+// Define the relative path to the core environment Dockerfile within the repository.
+const CORE_DOCKERFILE_PATH: &str = "presets/Dockerfile.devrs";
+// Define the default image name if config is missing or empty.
+const DEFAULT_CORE_IMAGE_NAME: &str = "devrs-core-env";
+// Define the default image tag if config is missing or empty.
+const DEFAULT_CORE_IMAGE_TAG: &str = "latest";
 
 /// # Environment Build Arguments (`BuildArgs`)
 ///
 /// Defines the command-line arguments accepted by the `devrs env build` subcommand.
 /// Uses the `clap` crate for parsing and validation.
 #[derive(Parser, Debug)]
+#[command(
+    about = "Build the core DevRS development environment Docker image",
+    long_about = "Builds the main Docker image containing the shared development toolchain.\n\
+                  Uses the 'presets/Dockerfile.devrs' file within the repository."
+)]
 pub struct BuildArgs {
     /// Optional: If set, instructs Docker to build the image without using its layer cache.
     /// This forces all steps in the Dockerfile to be re-executed, which can be useful
@@ -67,7 +80,7 @@ pub struct BuildArgs {
     /// Optional: Specifies a target stage to build up to within a multi-stage Dockerfile.
     /// Example: `--stage base-tools`.
     /// **Note:** While the argument is parsed, the underlying build logic in `common::docker::build_image`
-    /// does not currently implement the `--target` flag for Docker builds. This option is currently informational.
+    /// does not currently pass the `--target` flag to Docker. This option is currently informational.
     #[arg(long)] // Define as `--stage <STAGE_NAME>`.
     stage: Option<String>,
 }
@@ -76,23 +89,20 @@ pub struct BuildArgs {
 ///
 /// The main asynchronous handler function for the `devrs env build` command.
 /// It orchestrates the process of building the core development environment Docker image
-/// based on the main `Dockerfile` in the repository root and configuration settings.
+/// based on `presets/Dockerfile.devrs` and configuration settings.
 ///
 /// ## Workflow:
 /// 1.  Logs the start and parsed arguments. Notes if `--stage` is used but not fully implemented.
-/// 2.  Defines hardcoded default values for the image name (`devrs-env`) and tag (`latest`).
+/// 2.  Defines hardcoded default values for the image name and tag.
 /// 3.  Attempts to load the DevRS configuration using `core::config::load_config`.
-/// 4.  If config loads successfully, it uses the `core_env.image_name` and `core_env.image_tag` from the config,
-///     *unless* those values are empty strings, in which case it falls back to the hardcoded defaults.
-/// 5.  If config loading fails, logs a warning and proceeds using the hardcoded defaults.
-/// 6.  Constructs the full image tag string (e.g., `image_name:image_tag`).
-/// 7.  Validates that neither the final `image_name` nor `image_tag` is empty.
-/// 8.  Defines the expected relative path to the Dockerfile ("Dockerfile") and the build context directory (".").
-/// 9.  Validates that the "Dockerfile" exists and is a file in the current working directory (assumed to be the repository root).
-/// 10. Calls the shared `common::docker::build_image` function, providing the full image tag, Dockerfile path ("Dockerfile"),
+/// 4.  Determines the final image name and tag, using config values if present and non-empty, otherwise falling back to defaults.
+/// 5.  Constructs the full image tag string (e.g., `image_name:image_tag`). Validates it's not empty.
+/// 6.  Defines the relative path to the Dockerfile (`presets/Dockerfile.devrs`) and the build context directory (".").
+/// 7.  Validates that the Dockerfile exists and is a file in the current working directory (assumed to be the repository root).
+/// 8.  Calls the shared `common::docker::build_image` function, providing the full image tag, relative Dockerfile path,
 ///     context path ("."), and the `no_cache` flag.
-/// 11. Streams Docker build output to the console.
-/// 12. Logs and prints a success message upon completion.
+/// 9.  Streams Docker build output to the console.
+/// 10. Logs and prints a success message upon completion.
 ///
 /// ## Arguments
 ///
@@ -101,55 +111,56 @@ pub struct BuildArgs {
 /// ## Returns
 ///
 /// * `Result<()>`: Returns `Ok(())` on successful image build.
-/// * `Err`: Returns an `Err` if configuration loading fails critically (e.g., invalid TOML),
+/// * `Err`: Returns an `Err` if configuration loading fails critically,
 ///   if the Dockerfile is not found, or if the Docker build process itself fails.
 pub async fn handle_build(args: BuildArgs) -> Result<()> {
     info!("Handling env build command..."); // Log entry point.
     debug!("Build args: {:?}", args); // Log parsed arguments.
 
     // Check if the --stage argument was used and warn that it's not fully implemented yet.
-    if args.stage.is_some() {
-        warn!("The --stage argument is not fully implemented in the build process yet.");
+    if let Some(stage_name) = &args.stage {
+        warn!(
+            "The --stage={} argument is provided but not fully implemented in the build process yet.",
+            stage_name
+        );
+        // Note: To implement this, the `common::docker::build_image` function would need
+        // to be updated to accept and pass a 'target' option to bollard's BuildImageOptions.
     }
 
     // --- Determine Image Name and Tag ---
-    // Define default values used if config loading fails or values are empty.
-    let default_image_name = "devrs-env"; // Default name for the core environment image.
-    let default_image_tag = "latest"; // Default tag.
-
     // Initialize with defaults.
-    let mut image_name = default_image_name.to_string();
-    let mut image_tag = default_image_tag.to_string();
+    let mut image_name = DEFAULT_CORE_IMAGE_NAME.to_string();
+    let mut image_tag = DEFAULT_CORE_IMAGE_TAG.to_string();
 
     // Attempt to load configuration.
-    match config::load_config() { //
+    match config::load_config() {
         Ok(cfg) => {
-            // Config loaded successfully.
             info!("Successfully loaded configuration.");
-            // Use the configured image name *only if it's not empty*.
-            if !cfg.core_env.image_name.is_empty() {
+            // Use configured name if not empty, else keep default.
+            if !cfg.core_env.image_name.trim().is_empty() {
                 image_name = cfg.core_env.image_name;
             } else {
                 info!(
-                    "Loaded config core_env.image_name is empty, using default '{}'",
-                    default_image_name
+                    "Config 'core_env.image_name' is empty, using default '{}'",
+                    DEFAULT_CORE_IMAGE_NAME
                 );
             }
-            // Use the configured image tag *only if it's not empty*.
-            if !cfg.core_env.image_tag.is_empty() {
+            // Use configured tag if not empty, else keep default.
+            if !cfg.core_env.image_tag.trim().is_empty() {
                 image_tag = cfg.core_env.image_tag;
             } else {
                 info!(
-                    "Loaded config core_env.image_tag is empty, using default '{}'",
-                    default_image_tag
+                    "Config 'core_env.image_tag' is empty, using default '{}'",
+                    DEFAULT_CORE_IMAGE_TAG
                 );
             }
         }
         Err(e) => {
-            // Config loading failed. Log a warning but continue with defaults.
-            // `load_config` generally only returns critical errors (like parse errors),
-            // not file-not-found errors (which it handles internally).
-            warn!("Could not load configuration ({}). Proceeding with default image name '{}' and tag '{}'.", e, default_image_name, default_image_tag);
+            // Config loading failed. Log warning and proceed with defaults.
+            warn!(
+                "Could not load configuration ({}). Proceeding with default image name '{}' and tag '{}'.",
+                e, DEFAULT_CORE_IMAGE_NAME, DEFAULT_CORE_IMAGE_TAG
+            );
         }
     }
 
@@ -158,17 +169,17 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     info!("Using image target: {}", full_image_tag); // Log the final tag being used.
 
     // --- Sanity Check ---
-    // Ensure that after processing config/defaults, we don't have an empty name or tag.
-    if image_name.is_empty() || image_tag.is_empty() {
-        anyhow::bail!( // Use anyhow::bail! for a direct error return.
-            "Internal error: image name ('{}') or tag ('{}') is empty after config processing. Cannot build image ':'.",
+    // This check should ideally not fail given the default fallbacks, but added for safety.
+    if image_name.trim().is_empty() || image_tag.trim().is_empty() {
+        bail!( // Use anyhow::bail! for a direct error return.
+            "Internal error: image name ('{}') or tag ('{}') is empty after config processing. Cannot build image.",
             image_name, image_tag
         );
     }
 
     // --- Define Build Paths ---
-    // Define the expected relative path to the Dockerfile.
-    let dockerfile_path_str = "Dockerfile";
+    // Define the relative path to the Dockerfile.
+    let dockerfile_path_str = CORE_DOCKERFILE_PATH;
     // Define the build context directory (always the current directory, represented as ".").
     let context_dir_str = ".";
     // Create Path objects for validation.
@@ -176,10 +187,11 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     let context_dir = Path::new(context_dir_str); // Represents current directory.
 
     // --- Validate Dockerfile Existence ---
-    // Check if the Dockerfile exists and is a file in the current directory.
-    // This assumes the command is run from the repository root.
-    if !dockerfile_path.exists() || !dockerfile_path.is_file() {
-        anyhow::bail!(
+    // Check if the Dockerfile exists and is a file in the expected location relative to CWD.
+    // Assumes the command is run from the repository root.
+    if !dockerfile_path.is_file() {
+        // Use is_file() for better check
+        bail!(
             "Core environment Dockerfile not found at expected path: '{}'. Please run this command from the root of the devrs repository.",
             dockerfile_path.display()
         );
@@ -190,18 +202,19 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     // --- Execute Docker Build ---
     // Print message to user indicating the start of the build.
     println!(
-        "Building core environment image: {} (No Cache: {})...",
-        full_image_tag, args.no_cache
+        "Building core environment image: {} (Using {}) (No Cache: {})...",
+        full_image_tag, dockerfile_path_str, args.no_cache
     );
     // Call the shared Docker build utility function.
     docker::build_image(
-        &full_image_tag,        // The final image tag.
-        dockerfile_path_str,    // Relative path to Dockerfile within context.
-        context_dir_str,        // Build context path (".").
-        args.no_cache,          // Pass the no-cache flag.
+        &full_image_tag,     // The final image tag.
+        dockerfile_path_str, // Relative path to Dockerfile within context.
+        context_dir_str,     // Build context path (".").
+        args.no_cache,       // Pass the no-cache flag.
     )
     .await // Await the async build process.
-    .with_context(|| { // Add context if the build function returns an error.
+    .with_context(|| {
+        // Add context if the build function returns an error.
         format!(
             "Failed to build core environment image '{}'",
             full_image_tag
@@ -222,43 +235,71 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     Ok(()) // Indicate overall success.
 }
 
-
 // --- Unit Tests ---
-// Focus on argument parsing and tag generation logic.
-// Testing the actual build requires mocking config loading and Docker API calls.
+/// Tests for the `env build` subcommand arguments and logic.
 #[cfg(test)]
 mod tests {
-    use super::*;
-    // May need config structs for mocking: use crate::config::{Config, CoreEnvConfig};
+    use super::*; // Import items from parent module (build.rs)
+    use crate::core::config::{Config, CoreEnvConfig}; // Import necessary config structs for mocking.
     use std::{env, fs};
     use tempfile::tempdir; // For creating temporary directories in tests.
 
-    // Helper to set up a dummy Dockerfile in a temporary directory
-    // and change the current working directory to it for the test duration.
-    fn setup_dummy_dockerfile() -> tempfile::TempDir {
-        let temp_dir = tempdir().unwrap();
-        fs::write( // Create a minimal Dockerfile.
-            temp_dir.path().join("Dockerfile"),
-            "FROM scratch\nCMD echo hello",
-        )
-        .unwrap();
-        // Store original CWD to restore later (important if tests run in parallel).
-        // let _original_cwd = env::current_dir().unwrap(); // Store original CWD. This isn't easily restored.
-        // Change CWD *for this test*. Relies on tests running serially or using a crate for CWD isolation.
-        env::set_current_dir(temp_dir.path()).expect("Failed to change CWD for test");
-        temp_dir // Return the guard to manage the temp directory's lifetime.
+    // Helper function to create a mock Config object.
+    #[allow(dead_code)] // Allow if not used in all test variations
+    fn mock_config(name: Option<&str>, tag: Option<&str>) -> Config {
+        Config {
+            core_env: CoreEnvConfig {
+                image_name: name.map_or_else(String::new, String::from), // Use empty string if None
+                image_tag: tag.map_or_else(String::new, String::from),   // Use empty string if None
+                ..Default::default()
+            },
+            ..Default::default()
+        }
     }
 
-    // Test the handler uses default image name/tag when config loading fails (mocked).
-    #[tokio::test]
-    #[ignore] // Ignored because it requires mocking config::load_config and docker::build_image, and manipulates CWD.
-    async fn test_handle_build_uses_default() {
-        // Setup: Ensure Dockerfile exists in a temporary CWD.
-        let _temp_dir_guard = setup_dummy_dockerfile(); // CWD is now temp_dir
+    // Helper function to set up a dummy Dockerfile in a temporary directory
+    // and change the current working directory to it for the test duration.
+    // Creates the file at the *new* expected path: presets/Dockerfile.devrs
+    fn setup_dummy_dockerfile() -> Result<tempfile::TempDir> {
+        let temp_dir = tempdir()?;
+        let presets_dir = temp_dir.path().join("presets");
+        fs::create_dir(&presets_dir)?; // Create presets subdir
+                                       // Create the renamed dockerfile inside presets
+        fs::write(
+            presets_dir.join("Dockerfile.devrs"),
+            "FROM scratch\nLABEL test=ok",
+        )?;
+        // Set CWD to the root of the temp dir (parent of presets)
+        // **WARNING:** Affects process CWD. Use `serial_test` if needed.
+        env::set_current_dir(temp_dir.path())?;
+        Ok(temp_dir) // Return the guard to manage the temp directory's lifetime.
+    }
 
-        // --- Mocking Setup (Conceptual) ---
-        // Mock `config::load_config()` to return `Err(...)`.
-        // Mock `docker::build_image` to expect a call with the default tag "devrs-env:latest".
+    /// Test parsing of arguments like --no-cache and --stage.
+    #[test]
+    fn test_build_args_parsing() {
+        // Test default args
+        let args_default = BuildArgs::try_parse_from(["build"]).unwrap();
+        assert!(!args_default.no_cache);
+        assert!(args_default.stage.is_none());
+
+        // Test flags enabled
+        let args_flags =
+            BuildArgs::try_parse_from(["build", "--no-cache", "--stage", "builder"]).unwrap();
+        assert!(args_flags.no_cache);
+        assert_eq!(args_flags.stage, Some("builder".to_string()));
+    }
+
+    /// Test the handler uses default image name/tag when config loading fails (mocked).
+    #[tokio::test]
+    #[ignore] // Ignored because it requires mocking config::load_config and docker::build_image.
+    async fn test_handle_build_uses_default_on_config_fail() {
+        // --- Setup ---
+        let _temp_dir_guard = setup_dummy_dockerfile().expect("Test setup failed"); // Ensure Dockerfile exists at presets/Dockerfile.devrs
+
+        // --- Mocking (Conceptual) ---
+        // Mock `config::load_config()` to return `Err(anyhow!("Config load error"))`.
+        // Mock `docker::build_image` to expect a call with the default tag "devrs-core-env:latest".
 
         // --- Test Execution ---
         let args = BuildArgs {
@@ -269,18 +310,19 @@ mod tests {
 
         // --- Assertions ---
         assert!(result.is_ok()); // Expect overall success even if config load fails (uses defaults).
-        // Verify (via mock) that `docker::build_image` was called with tag "devrs-env:latest".
+                                 // Verify (via mock) that `docker::build_image` was called with default tag.
+                                 // Verify warning logged about config failure.
     }
 
-    // Test the handler uses image name/tag from loaded config when available.
+    /// Test the handler uses image name/tag from loaded config when available and non-empty.
     #[tokio::test]
-    #[ignore] // Ignored because it requires mocking config::load_config and docker::build_image, and manipulates CWD.
+    #[ignore] // Ignored because it requires mocking config::load_config and docker::build_image.
     async fn test_handle_build_uses_config() {
-        let _temp_dir_guard = setup_dummy_dockerfile(); // Setup env.
+        let _temp_dir_guard = setup_dummy_dockerfile().expect("Test setup failed");
 
-        // --- Mocking Setup (Conceptual) ---
-        // Mock `config::load_config()` to return `Ok(Config { core_env: CoreEnvConfig { image_name: "custom-name".into(), image_tag: "custom-tag".into(), .. }, .. })`.
-        // Mock `docker::build_image` to expect a call with the tag "custom-name:custom-tag".
+        // --- Mocking (Conceptual) ---
+        // Mock `config::load_config` -> Ok(mock_config(Some("custom-core"), Some("beta")))
+        // Mock `docker::build_image` -> expect call with tag "custom-core:beta"
 
         // --- Test Execution ---
         let args = BuildArgs {
@@ -291,22 +333,45 @@ mod tests {
 
         // --- Assertions ---
         assert!(result.is_ok());
-        // Verify (via mock) that `docker::build_image` was called with tag "custom-name:custom-tag".
+        // Verify (via mock) that `docker::build_image` was called with tag "custom-core:beta".
     }
 
-    // Add test case for empty strings in config if needed (should fallback to defaults).
-
-    // Test the handler fails correctly if the Dockerfile is missing.
+    /// Test the handler uses defaults if config values are empty strings.
     #[tokio::test]
-    #[ignore] // Ignores because it requires mocking config::load_config and manipulates CWD.
-    async fn test_handle_build_no_dockerfile_fallback() {
-        // Setup: Create an empty temp directory and set it as CWD.
-        let temp_dir = tempdir().unwrap();
-        // let _original_cwd = env::current_dir().unwrap(); // Store original.
-        env::set_current_dir(temp_dir.path()).expect("Failed to change CWD for test");
+    #[ignore] // Ignored because it requires mocking config::load_config and docker::build_image.
+    async fn test_handle_build_uses_default_on_empty_config() {
+        let _temp_dir_guard = setup_dummy_dockerfile().expect("Test setup failed");
 
-        // --- Mocking Setup (Conceptual) ---
-        // Mock `config::load_config` to return Ok(Default::default()) or Err.
+        // --- Mocking (Conceptual) ---
+        // Mock `config::load_config` -> Ok(mock_config(Some(""), Some(""))) // Empty strings
+        // Mock `docker::build_image` -> expect call with default tag "devrs-core-env:latest"
+
+        // --- Test Execution ---
+        let args = BuildArgs {
+            no_cache: false,
+            stage: None,
+        };
+        let result = handle_build(args).await;
+
+        // --- Assertions ---
+        assert!(result.is_ok());
+        // Verify (via mock) that `docker::build_image` was called with default tag.
+    }
+
+    /// Test the handler fails correctly if the Dockerfile (`presets/Dockerfile.devrs`) is missing.
+    #[tokio::test]
+    #[ignore] // Ignores because it requires mocking config::load_config.
+    async fn test_handle_build_no_dockerfile() {
+        // --- Setup ---
+        // Create an empty temp directory and set it as CWD.
+        let temp_dir = tempdir().unwrap();
+        // **WARNING:** Affects process CWD. Use `serial_test` if needed.
+        let original_cwd = env::current_dir().unwrap();
+        env::set_current_dir(temp_dir.path()).expect("Failed to change CWD for test");
+        // *Do not* create presets/Dockerfile.devrs
+
+        // --- Mocking (Conceptual) ---
+        // Mock `config::load_config` -> Ok(Config::default())
 
         // --- Test Execution ---
         let args = BuildArgs {
@@ -317,12 +382,13 @@ mod tests {
 
         // --- Assertions ---
         assert!(result.is_err()); // Expect failure.
-        // Check if the error message indicates the Dockerfile wasn't found.
+                                  // Check if the error message indicates the Dockerfile wasn't found.
         assert!(result
             .unwrap_err()
             .to_string()
-            .contains("Dockerfile not found"));
+            .contains("Dockerfile not found at expected path: presets/Dockerfile.devrs"));
 
-        // Restore CWD if possible/needed: env::set_current_dir(_original_cwd).unwrap();
+        // --- Cleanup ---
+        env::set_current_dir(original_cwd).unwrap(); // Restore original CWD
     }
 }

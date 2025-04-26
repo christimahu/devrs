@@ -88,13 +88,15 @@ pub struct RunArgs {
     /// Optional: Specifies port mappings between the host and the container.
     /// Format: `HOST_PORT:CONTAINER_PORT` (e.g., "8080:80", "127.0.0.1:9000:9000").
     /// Can be specified multiple times to map multiple ports.
-    #[arg(short, long = "port", action = clap::ArgAction::Append)] // Define as `-p` or `--port`, allowing multiple occurrences.
+    #[arg(short, long = "port", action = clap::ArgAction::Append)]
+    // Define as `-p` or `--port`, allowing multiple occurrences.
     pub ports: Vec<String>,
 
     /// Optional: Sets environment variables inside the container.
     /// Format: `KEY=VALUE` (e.g., "DATABASE_URL=postgres://...", "API_KEY=123").
     /// Can be specified multiple times to set multiple variables.
-    #[arg(short, long = "env", action = clap::ArgAction::Append)] // Define as `-e` or `--env`, allowing multiple occurrences.
+    #[arg(short, long = "env", action = clap::ArgAction::Append)]
+    // Define as `-e` or `--env`, allowing multiple occurrences.
     pub env_vars: Vec<String>,
 
     /// Optional: Runs the container in the background (detached mode).
@@ -252,18 +254,19 @@ pub async fn handle_run(args: RunArgs) -> Result<()> {
         container_name, image_name
     );
     docker::run_container(
-        &image_name, // Image to use.
-        &container_name, // Name for the new container.
-        &args.ports, // Port mappings (Vec<String>).
-        &mounts, // Volume mounts (currently empty Vec<MountConfig>).
-        &env_map, // Environment variables (HashMap).
-        None, // workdir - use container's default (could be added as arg later).
-        args.detach, // Run in background?
-        args.rm, // Auto-remove on exit?
+        &image_name,      // Image to use.
+        &container_name,  // Name for the new container.
+        &args.ports,      // Port mappings (Vec<String>).
+        &mounts,          // Volume mounts (currently empty Vec<MountConfig>).
+        &env_map,         // Environment variables (HashMap).
+        None,             // workdir - use container's default (could be added as arg later).
+        args.detach,      // Run in background?
+        args.rm,          // Auto-remove on exit?
         command_override, // Optional command override.
     )
     .await // Await the async operation.
-    .with_context(|| { // Add context to potential errors.
+    .with_context(|| {
+        // Add context to potential errors.
         format!(
             "Failed to run container '{}' from image '{}'",
             container_name, image_name
@@ -294,7 +297,6 @@ pub async fn handle_run(args: RunArgs) -> Result<()> {
     Ok(()) // Indicate overall success of the command.
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing. Testing `handle_run` logic requires mocking.
 #[cfg(test)]
@@ -305,7 +307,7 @@ mod tests {
     #[test]
     fn test_run_args_parsing() {
         // Simulate `devrs container run --image myimage:v2 --name my-instance -p 80:8000 --port 443:8443 -e VAR1=val1 --env VAR2=val2 --detach --rm override_cmd --arg1`
-        let args = RunArgs::try_parse_from(&[
+        let args = RunArgs::try_parse_from([
             "run", // Command name context for clap.
             "--image",
             "myimage:v2",
@@ -319,11 +321,11 @@ mod tests {
             "VAR1=val1",
             "--env", // Long env flag.
             "VAR2=val2",
-            "--detach", // Detach flag.
-            "--rm", // Auto-remove flag.
-            "--", // Add separator before trailing command args
+            "--detach",     // Detach flag.
+            "--rm",         // Auto-remove flag.
+            "--",           // Add separator before trailing command args
             "override_cmd", // Start of the command override.
-            "--arg1", // Argument for the override command.
+            "--arg1",       // Argument for the override command.
         ])
         .unwrap(); // Expect parsing to succeed.
 
@@ -344,7 +346,7 @@ mod tests {
         // Note: In the current implementation, --image is optional if a default can be generated.
         // This test assumes --image is provided for simplicity. If --image were truly required,
         // `try_parse_from(&["run"])` would fail. Let's test with image provided.
-        let args = RunArgs::try_parse_from(&["run", "--image", "minimal:tag"]).unwrap();
+        let args = RunArgs::try_parse_from(["run", "--image", "minimal:tag"]).unwrap();
         // Verify explicitly provided image is parsed.
         assert_eq!(args.image, Some("minimal:tag".to_string()));
         // Verify other optional fields are None or empty/false by default.
@@ -368,7 +370,7 @@ mod tests {
         // Define arguments for the test.
         let args = RunArgs {
             image: Some("test:run".to_string()), // Explicit image.
-            name: None, // Let name default.
+            name: None,                          // Let name default.
             ports: vec!["8080:80".to_string()],
             env_vars: vec!["MODE=test".to_string()],
             detach: true,

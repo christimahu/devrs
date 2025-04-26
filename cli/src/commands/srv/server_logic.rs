@@ -269,7 +269,7 @@ async fn find_available_port(
 /// ## Arguments
 ///
 /// * `config`: A reference to the `ServerConfig` containing settings like the serving directory,
-/// index file name, and CORS enablement flag.
+///   index file name, and CORS enablement flag.
 ///
 /// ## Returns
 ///
@@ -315,9 +315,7 @@ fn create_app(config: &ServerConfig) -> Router {
         )
 }
 
-
 // Fallback handler function is removed as it's no longer referenced.
-
 
 // --- Unit Tests ---
 
@@ -331,7 +329,7 @@ mod tests {
     use super::*; // Import items from the parent module (server_logic.rs).
     use std::net::Ipv4Addr;
     use tempfile::TempDir; // For creating temporary directories.
-    use tokio::fs;          // For async file system operations in tests.
+    use tokio::fs; // For async file system operations in tests.
 
     /// Test finding an available port when the start port is free.
     #[tokio::test]
@@ -381,8 +379,7 @@ mod tests {
         let index_file_name = "index.html"; // Name is still part of config
 
         // Setup: Create a dummy index file (though not directly used for fallback in this router).
-        fs::write(dir_path.join(index_file_name), "<html>Test</html>")
-            .await?;
+        fs::write(dir_path.join(index_file_name), "<html>Test</html>").await?;
 
         // Setup: Create a minimal ServerConfig pointing to the temp directory.
         let config = ServerConfig {

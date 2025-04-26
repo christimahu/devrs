@@ -127,7 +127,7 @@ pub async fn handle_prune(args: PruneArgs) -> Result<()> {
         .into_iter()
         .filter(|c| {
             // Check if any name matches the prefix.
-            let name_matches = c.names.as_ref().map_or(false, |names| {
+            let name_matches = c.names.as_ref().is_some_and(|names| {
                 names
                     .iter()
                     .any(|n| n.trim_start_matches('/').starts_with(&core_env_name_prefix))
@@ -176,13 +176,15 @@ pub async fn handle_prune(args: PruneArgs) -> Result<()> {
     let mut removal_tasks = Vec::new();
     // Spawn a task for each container to be removed.
     for container_summary in containers_to_prune {
-        if let Some(id) = container_summary.id { // Ensure container has an ID.
+        if let Some(id) = container_summary.id {
+            // Ensure container has an ID.
             // Spawn the async removal task.
             removal_tasks.push(tokio::spawn(async move {
                 // Call the shared remove function. Pass force=false, as we know it's stopped.
                 // This prevents accidentally trying to force-remove a container that *was* stopped
                 // but somehow got restarted between the list and remove calls (unlikely but possible).
-                match docker::lifecycle::remove_container(&id, false).await { //
+                match docker::lifecycle::remove_container(&id, false).await {
+                    //
                     Ok(()) => {
                         println!("Removed container '{}'", id); // Inform user of success.
                         Ok(id) // Return Ok for success tracking.
@@ -233,7 +235,6 @@ pub async fn handle_prune(args: PruneArgs) -> Result<()> {
     }
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing. Testing handler logic requires mocking.
 #[cfg(test)]
@@ -244,7 +245,7 @@ mod tests {
     #[test]
     fn test_prune_args_parsing() {
         // Simulate `devrs env prune`
-        let args = PruneArgs::try_parse_from(&["prune"]).unwrap();
+        let args = PruneArgs::try_parse_from(["prune"]).unwrap();
         // Default value for `force` should be false.
         assert!(!args.force);
     }
@@ -252,13 +253,13 @@ mod tests {
     /// Test parsing with the `--force` flag (or `-f`).
     #[test]
     fn test_prune_args_parsing_force() {
-         // Simulate `devrs env prune --force`
-        let args_force = PruneArgs::try_parse_from(&["prune", "--force"]).unwrap();
+        // Simulate `devrs env prune --force`
+        let args_force = PruneArgs::try_parse_from(["prune", "--force"]).unwrap();
         // The `force` flag should be true.
         assert!(args_force.force);
-         // Simulate `devrs env prune -f`
-         let args_force_short = PruneArgs::try_parse_from(&["prune", "-f"]).unwrap();
-         assert!(args_force_short.force);
+        // Simulate `devrs env prune -f`
+        let args_force_short = PruneArgs::try_parse_from(["prune", "-f"]).unwrap();
+        assert!(args_force_short.force);
     }
 
     // Note: Testing the `handle_prune` function's logic requires mocking:

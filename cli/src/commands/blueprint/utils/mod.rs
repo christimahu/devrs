@@ -4,7 +4,7 @@
 //! Author: Christi Mahu
 //! Repository: https://github.com/christimahu/devrs
 //!
-//! **DISCLAIMER:** This repository is in the early phases of being rewritten 
+//! **DISCLAIMER:** This repository is in the early phases of being rewritten
 //! and is not suitable for production development yet.
 //!
 //! ## Overview
@@ -30,10 +30,10 @@
 //! ```rust
 //! use crate::commands::blueprint::utils::project_detector;
 //! use crate::commands::blueprint::utils::tree_printer;
-//! 
+//!
 //! // Detect project type from a directory
 //! let project_info = project_detector::detect_project_type(&path);
-//! 
+//!
 //! // Print directory structure
 //! let tree_string = tree_printer::print_directory_tree_to_string(&path, "my_project")?;
 //! ```

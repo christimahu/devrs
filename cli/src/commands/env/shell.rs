@@ -49,7 +49,7 @@
 use crate::{
     common::docker::{self}, // Access shared Docker utilities (ensure_running, exec).
     core::{
-        config, // Access configuration loading and structures.
+        config,        // Access configuration loading and structures.
         error::Result, // Standard Result type for error handling.
     },
 };
@@ -140,7 +140,9 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
                 warn!(
                     "Loaded configuration has empty image name or tag. Falling back to defaults."
                 );
-                println!("Warning: Loaded configuration missing core image details. Using defaults.");
+                println!(
+                    "Warning: Loaded configuration missing core image details. Using defaults."
+                );
                 cfg = create_minimal_default_config().await?; // Generate default config.
                 using_defaults = true; // Mark that defaults are being used.
             } else {
@@ -172,20 +174,23 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
 
     // 3. Ensure the container exists and is running. This handles creation/starting automatically.
     // Pass the active config (`cfg`) which contains image name, mounts, ports etc. needed for creation.
-    let needs_creation = docker::lifecycle::ensure_core_env_running(&container_name, &cfg) //
-        .await // Await the async operation.
-        .with_context(|| format!("Failed to prepare container '{}' for shell", container_name))?;
+    let needs_creation =
+        docker::lifecycle::ensure_core_env_running(&container_name, &cfg) //
+            .await // Await the async operation.
+            .with_context(|| {
+                format!("Failed to prepare container '{}' for shell", container_name)
+            })?;
     // `needs_creation` indicates if the container was created in this call.
 
     // If the container was just created *and* we used default settings, provide extra info.
     if needs_creation {
         info!("Container '{}' was newly created.", container_name);
         if using_defaults {
-            // Inform user about the default image and mount used.
             println!(
-                "Created container '{}' using default image '{}'.",
+                "Created container '{}' using default image '{}:{}'.", // Combine format string
                 container_name,
-                format!("{}:{}", cfg.core_env.image_name, cfg.core_env.image_tag) // Show image used.
+                cfg.core_env.image_name, // Pass args directly
+                cfg.core_env.image_tag   // Pass args directly
             );
             println!("Current host directory mounted to /code inside the container.");
             println!("Default working directory set to /code.");
@@ -208,16 +213,18 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
     info!("Using working directory: {}", workdir_to_use);
 
     // Use the shared `exec_in_container` utility to run the shell interactively.
-    let exit_code = docker::interaction::exec_in_container( //
-        &container_name,        // Target container name.
-        &shell_cmd,             // Command to run (the shell).
-        true,                   // interactive = true: Attach stdin.
-        true,                   // tty = true: Allocate a pseudo-terminal.
-        Some(&workdir_to_use),  // Set the working directory inside the container.
-        None,                   // user = None: Run as container's default user.
+    let exit_code = docker::interaction::exec_in_container(
+        //
+        &container_name,       // Target container name.
+        &shell_cmd,            // Command to run (the shell).
+        true,                  // interactive = true: Attach stdin.
+        true,                  // tty = true: Allocate a pseudo-terminal.
+        Some(&workdir_to_use), // Set the working directory inside the container.
+        None,                  // user = None: Run as container's default user.
     )
     .await // Await the async execution.
-    .with_context(|| { // Add context if the exec operation fails.
+    .with_context(|| {
+        // Add context if the exec operation fails.
         format!(
             "Failed to execute interactive shell in container '{}'",
             container_name
@@ -294,14 +301,12 @@ async fn create_minimal_default_config() -> Result<config::Config> {
             image_name: "devrs-env".to_string(),
             image_tag: "latest".to_string(),
             // Define a default mount: current host directory -> /code in container.
-            mounts: vec![
-                config::MountConfig {
-                    host: host_path, // The current directory on the host.
-                    container: "/code".to_string(), // Target path inside the container.
-                    readonly: false, // Make it read-write by default.
-                },
-            ],
-            ports: vec![], // No default port mappings.
+            mounts: vec![config::MountConfig {
+                host: host_path,                // The current directory on the host.
+                container: "/code".to_string(), // Target path inside the container.
+                readonly: false,                // Make it read-write by default.
+            }],
+            ports: vec![],                // No default port mappings.
             env_vars: Default::default(), // No default environment variables.
             // Set the default working directory inside the container to match the mount point.
             default_workdir: "/code".to_string(),
@@ -311,7 +316,6 @@ async fn create_minimal_default_config() -> Result<config::Config> {
         application_defaults: Default::default(),
     })
 }
-
 
 // --- Unit Tests ---
 // Focus on argument parsing and the default config generation logic.
@@ -324,12 +328,11 @@ mod tests {
     #[test]
     fn test_shell_args_parsing() {
         // Simulate `devrs env shell` (no args)
-        let args_default = ShellArgs::try_parse_from(&["shell"]).unwrap();
+        let args_default = ShellArgs::try_parse_from(["shell"]).unwrap();
         assert!(args_default.name.is_none()); // Name should be None by default.
 
         // Simulate `devrs env shell --name custom-core-env`
-        let args_named =
-            ShellArgs::try_parse_from(&["shell", "--name", "custom-core-env"]).unwrap();
+        let args_named = ShellArgs::try_parse_from(["shell", "--name", "custom-core-env"]).unwrap();
         // Name should be parsed correctly.
         assert_eq!(args_named.name, Some("custom-core-env".to_string()));
     }
@@ -400,4 +403,4 @@ mod tests {
         // Verify (via mocks) that `ensure_core_env_running` and `exec_in_container` were called
         // with arguments derived from the *default* config (e.g., image "devrs-env:latest", workdir "/code").
     }
-} 
+}

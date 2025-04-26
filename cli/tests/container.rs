@@ -23,7 +23,6 @@ use common::*;
 // Import necessary items directly
 use predicates::prelude::*;
 
-
 /// # Test Container Build (`test_container_build`)
 ///
 /// Verifies basic invocation of `devrs container build`.
@@ -34,9 +33,7 @@ fn test_container_build() {
     // TODO: Setup mock project dir with Dockerfile
     // TODO: Run `devrs container build` in that dir
     // TODO: Assert success (or mock docker::build_image call)
-    devrs_cmd().args(["container", "build"])
-        .assert()
-        .success(); // Will fail without Docker/setup or if no Dockerfile found
+    devrs_cmd().args(["container", "build"]).assert().success(); // Will fail without Docker/setup or if no Dockerfile found
 }
 
 /// # Test Container Run (`test_container_run`)
@@ -82,7 +79,7 @@ fn test_container_shell() {
             "container",
             "shell",
             "alpine:latest", // Make sure alpine:latest is pulled
-            "--", // Separator
+            "--",            // Separator
             "echo",
             "hello",
         ])
@@ -102,7 +99,8 @@ fn test_container_logs() {
     // TODO: Start a container
     // TODO: Run `devrs container logs <name>`
     // TODO: Assert success
-    devrs_cmd().args(["container", "logs", "test-container-for-logs"])
+    devrs_cmd()
+        .args(["container", "logs", "test-container-for-logs"])
         .assert()
         // This will fail as container likely doesn't exist
         .failure();
@@ -119,7 +117,8 @@ fn test_container_stop() {
     // TODO: Start a container
     // TODO: Run `devrs container stop <name>`
     // TODO: Assert success
-    devrs_cmd().args(["container", "stop", "test-container-for-stop"])
+    devrs_cmd()
+        .args(["container", "stop", "test-container-for-stop"])
         .assert()
         // This will fail as container likely doesn't exist/isn't running
         .failure();
@@ -136,7 +135,8 @@ fn test_container_rm() {
     // TODO: Create a stopped container for a more complete test
     // TODO: Run `devrs container rm <name>`
     // TODO: Assert success
-    devrs_cmd().args(["container", "rm", "test-container-for-rm"])
+    devrs_cmd()
+        .args(["container", "rm", "test-container-for-rm"])
         .assert()
         // This should succeed even if container doesn't exist
         // because the handler treats ContainerNotFound as success for 'rm'.
@@ -154,7 +154,8 @@ fn test_container_rmi() {
     // TODO: Ensure a test image exists
     // TODO: Run `devrs container rmi <image>`
     // TODO: Assert success
-    devrs_cmd().args(["container", "rmi", "test-image-for-rmi"])
+    devrs_cmd()
+        .args(["container", "rmi", "test-image-for-rmi"])
         .assert()
         // This will fail as image likely doesn't exist
         .failure();

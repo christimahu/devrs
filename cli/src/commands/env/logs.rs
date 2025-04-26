@@ -51,7 +51,7 @@
 use crate::{
     common::docker::{self}, // Access shared Docker utilities (interaction::get_container_logs).
     core::{
-        config, // Access configuration loading.
+        config,        // Access configuration loading.
         error::Result, // Standard Result type for error handling.
     },
 };
@@ -74,7 +74,8 @@ pub struct LogsArgs {
     /// Optional: Specifies the number of lines to show from the end of the logs.
     /// Accepts a specific number (e.g., "500") or the literal string "all".
     /// Defaults to "100" lines if omitted or if an invalid numeric value is provided.
-    #[arg(long, short = 'n', default_value = "100")] // Define as `--lines` or `-n`, with default.
+    #[arg(long, short = 'n', default_value = "100")]
+    // Define as `--lines` or `-n`, with default.
     lines: String,
 
     /// Optional: Specifies the exact name of the core environment container to fetch logs from.
@@ -124,7 +125,8 @@ pub async fn handle_logs(args: LogsArgs) -> Result<()> {
 
     // 3. Check if the container exists before attempting to get logs.
     // While `get_container_logs` also checks, checking here provides a slightly earlier and potentially clearer warning.
-    if !docker::state::container_exists(&container_name).await? { //
+    if !docker::state::container_exists(&container_name).await? {
+        //
         // Log a warning. The subsequent call to `get_container_logs` will return the proper error.
         warn!("Container '{}' not found.", container_name);
         // Note: We proceed here and let `get_container_logs` return the ContainerNotFound error
@@ -197,7 +199,6 @@ fn get_core_env_container_name(cfg: &config::Config) -> String {
     format!("{}-instance", cfg.core_env.image_name)
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing for the `env logs` command. Testing the handler
 // logic requires mocking config loading and Docker API interactions.
@@ -209,8 +210,8 @@ mod tests {
     #[test]
     fn test_logs_args_parsing_defaults() {
         // Simulate `devrs env logs`
-        let args = LogsArgs::try_parse_from(&["logs"]).unwrap(); // Use "logs" as command name context.
-        // Verify default values.
+        let args = LogsArgs::try_parse_from(["logs"]).unwrap(); // Use "logs" as command name context.
+                                                                // Verify default values.
         assert!(!args.follow); // Default is false.
         assert_eq!(args.lines, "100"); // Default is "100".
         assert!(args.name.is_none()); // Default is None.
@@ -220,12 +221,12 @@ mod tests {
     #[test]
     fn test_logs_args_parsing_with_options() {
         // Simulate `devrs env logs --follow -n 50 --name my-dev-container`
-        let args = LogsArgs::try_parse_from(&[
+        let args = LogsArgs::try_parse_from([
             "logs",
-            "--follow", // Follow flag.
-            "-n", // Short lines flag.
-            "50", // Lines value.
-            "--name", // Name flag.
+            "--follow",         // Follow flag.
+            "-n",               // Short lines flag.
+            "50",               // Lines value.
+            "--name",           // Name flag.
             "my-dev-container", // Name value.
         ])
         .unwrap(); // Expect parsing to succeed.
@@ -240,7 +241,7 @@ mod tests {
     #[test]
     fn test_logs_args_parsing_lines_all() {
         // Simulate `devrs env logs --lines all`
-        let args = LogsArgs::try_parse_from(&["logs", "--lines", "all"]).unwrap();
+        let args = LogsArgs::try_parse_from(["logs", "--lines", "all"]).unwrap();
         assert_eq!(args.lines, "all");
         // Check other defaults.
         assert!(!args.follow);

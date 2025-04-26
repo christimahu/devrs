@@ -50,7 +50,7 @@
 //! running container. For that, consider using `devrs container exec` or `docker exec`.
 //!
 use crate::{
-    common::docker, // Access shared Docker utilities (image_exists, run_container).
+    common::docker,      // Access shared Docker utilities (image_exists, run_container).
     core::error::Result, // Standard Result type for error handling.
 };
 use anyhow::{anyhow, Context}; // For error creation and adding context.
@@ -78,7 +78,6 @@ pub struct ShellArgs {
     // Force flag and confirmation prompt were removed for simplification.
     // #[arg(long, short)]
     // force: bool,
-
     /// Optional: Specifies the shell or command to run inside the container.
     /// If omitted, it defaults to "/bin/sh".
     /// If provided, the first word is treated as the command, and subsequent words
@@ -130,7 +129,8 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
     );
 
     // 1. Check if the target image exists locally. Error out if not found.
-    if !docker::images::image_exists(&args.image_name).await? { //
+    if !docker::images::image_exists(&args.image_name).await? {
+        //
         // Use the specific error type for clarity.
         return Err(anyhow!(crate::core::error::DevrsError::ImageNotFound {
             name: args.image_name
@@ -179,7 +179,8 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
     // - detach: false (foreground interactive session).
     // - rm: true (auto-remove container on exit).
     // - command: The shell/command determined in step 2.
-    docker::operations::run_container( //
+    docker::operations::run_container(
+        //
         &args.image_name,
         &temp_container_name,
         &[],                                                // No ports.
@@ -191,7 +192,8 @@ pub async fn handle_shell(args: ShellArgs) -> Result<()> {
         Some(cmd_to_run.clone()),                           // Command to run inside.
     )
     .await // Await the container execution.
-    .with_context(|| { // Add context if the run operation itself fails.
+    .with_context(|| {
+        // Add context if the run operation itself fails.
         format!(
             "Failed to start interactive shell in image '{}'",
             args.image_name
@@ -237,7 +239,6 @@ async fn get_default_workdir(_image_name: &str) -> String {
     "/".to_string()
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing. Testing the handler requires mocking Docker interactions.
 #[cfg(test)]
@@ -249,10 +250,10 @@ mod tests {
     fn test_shell_args_parsing_with_command() {
         // Simulate `devrs container shell myimage:debug python -V`
         // Note: Force flag was removed, so it's not included here.
-        let args = ShellArgs::try_parse_from(&[
+        let args = ShellArgs::try_parse_from([
             "shell",         // Command name context for clap.
             "myimage:debug", // Required image name.
-            "--", // Add separator before trailing command args
+            "--",            // Add separator before trailing command args
             "python",        // Start of the override command.
             "-V",            // Argument for the override command.
         ])
@@ -267,11 +268,11 @@ mod tests {
     /// Test parsing arguments without an override command (should use default shell).
     #[test]
     fn test_shell_args_parsing_default_shell() {
-         // Simulate `devrs container shell myimage:debug`
-        let args = ShellArgs::try_parse_from(&[
-            "shell",         // Command name context.
+        // Simulate `devrs container shell myimage:debug`
+        let args = ShellArgs::try_parse_from([
+            "shell", // Command name context.
             "myimage:debug", // Required image name.
-                             // No override command provided.
+                     // No override command provided.
         ])
         .unwrap(); // Expect parsing to succeed.
 
@@ -286,7 +287,7 @@ mod tests {
     #[test]
     fn test_shell_args_requires_name() {
         // Simulate `devrs container shell` (missing image name)
-        let result = ShellArgs::try_parse_from(&["shell"]);
+        let result = ShellArgs::try_parse_from(["shell"]);
         // Expect an error because the image name is required.
         assert!(result.is_err(), "Should fail without image name");
     }

@@ -51,7 +51,7 @@
 //!
 use crate::common::fs::io::ensure_dir_exists; // Use helper from sibling io module
 use crate::core::error::Result; // Use standard Result type from core::error
-use anyhow::{Context, bail}; // For context and concise error returns
+use anyhow::{bail, Context}; // For context and concise error returns
 use std::path::Path; // Filesystem path type
 use tracing::{debug, info, warn}; // Logging utilities
 
@@ -158,14 +158,15 @@ pub fn create_symlink(source: &Path, target: &Path) -> Result<()> {
                 .to_str() // Convert OsStr to Option<&str>
                 .unwrap_or("") // Use empty string if conversion fails
         ));
-        warn!( // Log the backup operation clearly.
+        warn!(
+            // Log the backup operation clearly.
             "Target {:?} exists or is a different link, backing up to {:?}",
             target, backup_path
         );
         // Attempt to rename the existing item to the backup path.
         std::fs::rename(target, &backup_path)
             .with_context(|| format!("Failed to backup existing item at {:?}", target))?;
-            // Propagate error if backup fails.
+        // Propagate error if backup fails.
     }
 
     // 4. Create the actual symbolic link using platform-specific APIs.
@@ -189,7 +190,7 @@ pub fn create_symlink(source: &Path, target: &Path) -> Result<()> {
             })?;
             info!("Created directory symlink: {:?} -> {:?}", target, source);
         } else {
-             // Create a file symlink.
+            // Create a file symlink.
             std::os::windows::fs::symlink_file(source, target).with_context(|| {
                 format!(
                     "Failed to create file symlink from {:?} to {:?}",
@@ -225,7 +226,7 @@ mod tests {
         let target_link = dir.path().join("target.link");
         fs::write(&source_file, "test")?; // Create the source file.
         create_symlink(&source_file, &target_link)?; // Create the link.
-        // Verify link existence and type.
+                                                     // Verify link existence and type.
         assert!(target_link.exists(), "Target link should exist");
         assert!(target_link.is_symlink(), "Target should be a symlink");
         // Verify the link points to the correct source file.
@@ -244,7 +245,7 @@ mod tests {
         fs::write(&source_file, "source")?; // Create source file.
         fs::write(&target_link, "original target")?; // Create conflicting file at target.
         create_symlink(&source_file, &target_link)?; // Create link (should trigger backup).
-        // Verify link creation.
+                                                     // Verify link creation.
         assert!(target_link.exists());
         assert!(target_link.is_symlink());
         // Verify backup file existence and content.
@@ -262,7 +263,7 @@ mod tests {
         let source_file = dir.path().join("source.txt");
         let target_link = dir.path().join("target.link");
         fs::write(&source_file, "test")?; // Create source.
-        // Manually create the *correct* symlink beforehand.
+                                          // Manually create the *correct* symlink beforehand.
         #[cfg(unix)]
         std::os::unix::fs::symlink(&source_file, &target_link)?;
         #[cfg(windows)]

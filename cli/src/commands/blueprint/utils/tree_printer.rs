@@ -51,12 +51,12 @@
 use crate::core::error::Result; // Use anyhow Result for error propagation
 use anyhow::{anyhow, Context}; // For adding context to errors
 use std::{
-    collections::HashSet,       // Used for cycle detection
-    fmt::Write as FmtWrite,     // Import the Write trait for string building, aliased to avoid conflicts
-    fs,                         // Standard filesystem operations
-    path::{Path, PathBuf},       // Filesystem path types
+    collections::HashSet,   // Used for cycle detection
+    fmt::Write as FmtWrite, // Import the Write trait for string building, aliased to avoid conflicts
+    fs,                     // Standard filesystem operations
+    path::{Path, PathBuf},  // Filesystem path types
 };
-use tracing::{debug, warn};      // For logging debug information and warnings
+use tracing::{debug, warn}; // For logging debug information and warnings
 
 // --- Constants for Tree Drawing ---
 // These constants define the Unicode characters used to draw the tree structure,
@@ -185,10 +185,10 @@ pub fn print_directory_tree_to_string(root_path: &Path, display_name: &str) -> R
     // `visited` contains the canonical root path (if resolved).
     // `output` is the buffer to write to.
     walk_and_build_string(
-        root_path, // Start directory
+        root_path,          // Start directory
         &mut String::new(), // Initial prefix (empty)
-        &mut visited, // Set for cycle detection
-        &mut output, // Output buffer
+        &mut visited,       // Set for cycle detection
+        &mut output,        // Output buffer
     )
     .context("Failed while generating directory tree structure string")?; // Add context on error
 
@@ -254,7 +254,7 @@ fn walk_and_build_string(
             // Determine the prefix component to add for the *next* level of recursion.
             // If this was the last entry at the current level, use a spacer; otherwise, use a pipe.
             let prefix_component = if is_last_entry { SPACER } else { PIPE }; // "    " or "│   "
-            // Append this component to the prefix *before* the recursive call.
+                                                                              // Append this component to the prefix *before* the recursive call.
             current_prefix.push_str(prefix_component);
 
             // --- Cycle Detection ---
@@ -273,7 +273,9 @@ fn walk_and_build_string(
                         // Calculate the correct prefix for the cycle message line.
                         let cycle_prefix = format!(
                             "{}{}",
-                            current_prefix.trim_end_matches(PIPE).trim_end_matches(SPACER),
+                            current_prefix
+                                .trim_end_matches(PIPE)
+                                .trim_end_matches(SPACER),
                             SPACER // Ensure consistent indentation
                         );
                         // Write the cycle indicator line.
@@ -425,7 +427,6 @@ fn read_and_sort_dir_entries(dir: &Path) -> Result<Vec<DirEntry>> {
     Ok(collected_entries)
 }
 
-
 // --- Unit Tests ---
 #[cfg(test)]
 mod tests {
@@ -492,7 +493,7 @@ mod tests {
         assert!(tree_string.contains("│   └── main.rs")); // main.rs is only item in src.
         assert!(tree_string.contains(&format!("├── {}{}{}", BOLD_START, "tests", BOLD_END))); // Check with bold codes
         assert!(tree_string.contains("│   ├── integration.rs")); // integration.rs first in tests.
-        assert!(tree_string.contains("│   └── mod.rs"));     // mod.rs is last in tests.
+        assert!(tree_string.contains("│   └── mod.rs")); // mod.rs is last in tests.
         assert!(tree_string.contains("└── Cargo.toml")); // Cargo.toml is the last item at root.
 
         Ok(())

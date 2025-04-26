@@ -40,12 +40,12 @@
 //! The output provides key details like Container ID (short), Image, Command, Created Timestamp, Status, Names, and Ports for each application container found.
 //!
 use crate::{
-    common::docker, // Access shared Docker utilities (list_containers).
+    common::docker,                // Access shared Docker utilities (list_containers).
     core::{config, error::Result}, // Standard config loading and Result type.
 };
 use anyhow::Context; // For adding context to errors.
-use clap::Parser; // For parsing command-line arguments.
 use bollard::models::PortTypeEnum; // Enum used for formatting port protocol type.
+use clap::Parser; // For parsing command-line arguments.
 use tracing::{debug, info}; // Logging framework utilities.
 
 /// # Container Status Arguments (`StatusArgs`)
@@ -111,14 +111,18 @@ pub async fn handle_status(args: StatusArgs) -> Result<()> {
     // Filter the list to exclude containers matching the core dev environment pattern.
     let app_containers: Vec<_> = container_summaries
         .into_iter() // Consume the original vector.
-        .filter(|c| { // Keep container 'c' if the closure returns true.
+        .filter(|c| {
+            // Keep container 'c' if the closure returns true.
             // Check if *any* of the container's names match the exclusion pattern.
-            !c.names.as_ref() // Get Option<&Vec<String>> for names.
-                .map_or(false, |names| { // If names exist...
-                    names.iter().any(|name| { // Check if any name matches...
+            !c.names
+                .as_ref() // Get Option<&Vec<String>> for names.
+                .is_some_and(|names| {
+                    // If names exist...
+                    names.iter().any(|name| {
+                        // Check if any name matches...
                         let clean_name = name.trim_start_matches('/'); // Docker often prefixes names with '/'.
-                        // Check if the cleaned name starts with the core env pattern prefix.
-                        clean_name.starts_with(&core_env_name_pattern.trim_end_matches('*'))
+                                                                       // Check if the cleaned name starts with the core env pattern prefix.
+                        clean_name.starts_with(core_env_name_pattern.trim_end_matches('*'))
                     })
                 })
         })
@@ -218,14 +222,14 @@ fn print_container_summary(container: &bollard::models::ContainerSummary) {
                 };
                 // Format the mapping string: HOST_IP:HOST_PORT -> CONTAINER_PORT/PROTOCOL
                 let port_mapping = format!(
-                    "  - {}:{}{}->{}{}", // Template string.
+                    "  - {}:{}{}->{}{}",                  // Template string.
                     p.ip.as_deref().unwrap_or("0.0.0.0"), // Host IP (defaults to 0.0.0.0 if not specified).
                     // Public (host) port - handle case where it might not be mapped.
                     p.public_port
                         .map_or_else(|| "<none>".to_string(), |pp| pp.to_string()),
-                    typ_str, // Protocol associated with host port mapping.
+                    typ_str,        // Protocol associated with host port mapping.
                     p.private_port, // Container's internal port (u16).
-                    typ_str // Protocol associated with container port.
+                    typ_str         // Protocol associated with container port.
                 );
                 println!("{}", port_mapping); // Print the formatted line.
             }
@@ -235,7 +239,6 @@ fn print_container_summary(container: &bollard::models::ContainerSummary) {
         println!("Ports:   <none>");
     }
 }
-
 
 // --- Unit Tests ---
 // Focus on argument parsing and the formatting logic of `print_container_summary`.
@@ -250,7 +253,7 @@ mod tests {
     #[test]
     fn test_status_args_parsing() {
         // Simulate `devrs container status`
-        let args = StatusArgs::try_parse_from(&["status"]).unwrap();
+        let args = StatusArgs::try_parse_from(["status"]).unwrap();
         // Default value for `all` should be false.
         assert!(!args.all);
     }
@@ -258,8 +261,8 @@ mod tests {
     /// Test argument parsing with the `--all` flag (or `-a`).
     #[test]
     fn test_status_args_parsing_all() {
-         // Simulate `devrs container status -a`
-        let args_all = StatusArgs::try_parse_from(&["status", "-a"]).unwrap();
+        // Simulate `devrs container status -a`
+        let args_all = StatusArgs::try_parse_from(["status", "-a"]).unwrap();
         // The `all` flag should be true.
         assert!(args_all.all);
     }
@@ -276,15 +279,15 @@ mod tests {
             names: Some(vec!["/my-app-1".to_string(), "/secondary_name".to_string()]), // Multiple names.
             image: Some("myapp:latest".to_string()),
             command: Some("/app/run -p 80 --verbose".to_string()), // Example command.
-            created: Some(1678886400), // Example Unix timestamp.
-            status: Some("Up About an hour".to_string()), // Example status string.
+            created: Some(1678886400),                             // Example Unix timestamp.
+            status: Some("Up About an hour".to_string()),          // Example status string.
             state: Some(ContainerStateStatusEnum::RUNNING.to_string()), // Example state.
             ports: Some(vec![
                 // Mapped TCP port.
                 Port {
-                    private_port: 80, // Container port.
-                    public_port: Some(8080), // Host port.
-                    typ: Some(PortTypeEnum::TCP), // Protocol.
+                    private_port: 80,                // Container port.
+                    public_port: Some(8080),         // Host port.
+                    typ: Some(PortTypeEnum::TCP),    // Protocol.
                     ip: Some("0.0.0.0".to_string()), // Host IP.
                 },
                 // Exposed but unmapped port.
@@ -294,11 +297,11 @@ mod tests {
                     typ: Some(PortTypeEnum::TCP),
                     ip: None, // No specific host IP.
                 },
-                 // Mapped UDP port.
-                 Port {
+                // Mapped UDP port.
+                Port {
                     private_port: 53,
                     public_port: Some(10053),
-                    typ: Some(PortTypeEnum::UDP), // UDP protocol.
+                    typ: Some(PortTypeEnum::UDP),      // UDP protocol.
                     ip: Some("127.0.0.1".to_string()), // Mapped only to localhost.
                 },
             ]),

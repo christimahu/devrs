@@ -146,7 +146,6 @@ pub async fn handle_blueprint(args: BlueprintArgs) -> Result<()> {
     Ok(())
 }
 
-
 // --- Unit Tests ---
 // These tests focus on ensuring that the argument parsing for the `blueprint`
 // command group and its subcommands works as expected via Clap. They also
@@ -163,7 +162,7 @@ mod tests {
     #[test]
     fn test_parses_blueprint_list() {
         // Simulate command-line input: `devrs blueprint list`
-        let result = BlueprintArgs::try_parse_from(&["blueprint", "list"]);
+        let result = BlueprintArgs::try_parse_from(["blueprint", "list"]);
         // Expect parsing to succeed.
         assert!(result.is_ok());
         // Verify that the parsed command is indeed the `List` variant.
@@ -176,9 +175,9 @@ mod tests {
     /// Test that `clap` correctly parses the `devrs blueprint create` command and its arguments.
     #[test]
     fn test_parses_blueprint_create() {
-         // Simulate command-line input: `devrs blueprint create --lang rust my-project`
+        // Simulate command-line input: `devrs blueprint create --lang rust my-project`
         let result =
-            BlueprintArgs::try_parse_from(&["blueprint", "create", "--lang", "rust", "my-project"]);
+            BlueprintArgs::try_parse_from(["blueprint", "create", "--lang", "rust", "my-project"]);
         // Expect parsing to succeed.
         assert!(result.is_ok());
         // Verify that the parsed command is the `Create` variant.
@@ -192,10 +191,10 @@ mod tests {
     #[test]
     fn test_parses_blueprint_info() {
         // Simulate command-line input: `devrs blueprint info rust`
-        let result = BlueprintArgs::try_parse_from(&["blueprint", "info", "rust"]);
+        let result = BlueprintArgs::try_parse_from(["blueprint", "info", "rust"]);
         // Expect parsing to succeed.
         assert!(result.is_ok());
-         // Verify that the parsed command is the `Info` variant.
+        // Verify that the parsed command is the `Info` variant.
         match result.unwrap().command {
             BlueprintCommand::Info(_) => {} // Correct variant found.
             _ => panic!("Incorrect subcommand parsed for 'info'"), // Fail if wrong variant parsed.
@@ -231,7 +230,7 @@ mod tests {
         //    This step is complex without a mocking library and is omitted here.
 
         // --- Test list command routing (conceptual) ---
-        let list_args = BlueprintArgs::try_parse_from(&["blueprint", "list"]).unwrap();
+        let list_args = BlueprintArgs::try_parse_from(["blueprint", "list"]).unwrap();
         // Expect handle_blueprint to call list::handle_list.
         // Without mocking, this will likely fail due to the real config loading.
         assert!(
@@ -240,15 +239,15 @@ mod tests {
         );
 
         // --- Test info command routing (conceptual) ---
-        let info_args = BlueprintArgs::try_parse_from(&["blueprint", "info", "rust"]).unwrap();
-         // Expect handle_blueprint to call info::handle_info.
+        let info_args = BlueprintArgs::try_parse_from(["blueprint", "info", "rust"]).unwrap();
+        // Expect handle_blueprint to call info::handle_info.
         assert!(
             handle_blueprint(info_args).await.is_err(),
             "Info handler expects config loading to work"
         );
 
         // --- Test create command routing (conceptual) ---
-        let create_args = BlueprintArgs::try_parse_from(&[
+        let create_args = BlueprintArgs::try_parse_from([
             "blueprint",
             "create",
             "--lang",
@@ -258,7 +257,7 @@ mod tests {
             temp_dir.path().to_str().unwrap(),
         ])
         .unwrap();
-         // Expect handle_blueprint to call create::handle_create.
+        // Expect handle_blueprint to call create::handle_create.
         assert!(
             handle_blueprint(create_args).await.is_err(),
             "Create handler expects config and templating"

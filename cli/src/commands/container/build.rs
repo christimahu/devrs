@@ -153,14 +153,16 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
 
     // Check if the resolved Dockerfile path exists.
     if !dockerfile_path.exists() {
-        anyhow::bail!( // Return an error if not found.
+        anyhow::bail!(
+            // Return an error if not found.
             "Dockerfile not found at expected path: {}",
             dockerfile_path.display()
         );
     }
     // Check if the path points to a regular file.
     if !dockerfile_path.is_file() {
-        anyhow::bail!( // Return an error if it's not a file (e.g., it's a directory).
+        anyhow::bail!(
+            // Return an error if it's not a file (e.g., it's a directory).
             "Specified Dockerfile path is not a file: {}",
             dockerfile_path.display()
         );
@@ -180,10 +182,10 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
     info!("Starting Docker build for image '{}'...", image_tag);
     // Call the shared build function from the common::docker module.
     docker::build_image(
-        &image_tag,       // The final tag for the image.
-        dockerfile_arg,   // The relative path to the Dockerfile within the context.
-        context_dir,      // The build context path (".").
-        args.no_cache,    // The boolean flag for using Docker cache.
+        &image_tag,     // The final tag for the image.
+        dockerfile_arg, // The relative path to the Dockerfile within the context.
+        context_dir,    // The build context path (".").
+        args.no_cache,  // The boolean flag for using Docker cache.
     )
     .await // Await the async build process.
     .with_context(|| format!("Failed to build Docker image '{}'", image_tag))?; // Add context on error.
@@ -194,7 +196,6 @@ pub async fn handle_build(args: BuildArgs) -> Result<()> {
 
     Ok(()) // Indicate overall success.
 }
-
 
 // --- Unit Tests ---
 // Tests focus on argument parsing and the logic for determining the image tag.
@@ -227,7 +228,7 @@ mod tests {
     // Returns the TempDir guard to ensure the directory is cleaned up afterwards.
     fn setup_test_env() -> tempfile::TempDir {
         let temp_dir = tempdir().unwrap(); // Create temp dir.
-        // Create a minimal valid Dockerfile.
+                                           // Create a minimal valid Dockerfile.
         fs::write(temp_dir.path().join("Dockerfile"), "FROM scratch").unwrap();
         // Change CWD to the temp directory. This is crucial because the default tag
         // generation and Dockerfile path resolution depend on the CWD.
@@ -305,7 +306,7 @@ mod tests {
     #[ignore] // Requires mocking `config::load_config`
     async fn test_handle_build_missing_dockerfile() {
         let temp_dir = tempdir().unwrap(); // Create an *empty* temp dir.
-        // Change CWD to the empty temp dir.
+                                           // Change CWD to the empty temp dir.
         env::set_current_dir(temp_dir.path()).unwrap();
 
         // --- Mocking (Conceptual) ---
@@ -334,7 +335,7 @@ mod tests {
     #[ignore] // Requires mocking `config::load_config` and `docker::build_image`
     async fn test_handle_build_custom_dockerfile() {
         let temp_dir = setup_test_env(); // Setup env (creates default "Dockerfile").
-        // Create the *custom* Dockerfile that the user will specify.
+                                         // Create the *custom* Dockerfile that the user will specify.
         fs::write(
             temp_dir.path().join("Dockerfile.dev"), // Custom filename.
             "FROM scratch AS dev",

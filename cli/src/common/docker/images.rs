@@ -66,11 +66,11 @@
 //! ```
 //!
 use crate::core::error::{DevrsError, Result}; // Use standard Result and custom Error
-use anyhow::{anyhow}; // For error context wrapping
+use anyhow::anyhow; // For error context wrapping
 use bollard::{
     image::{ListImagesOptions, RemoveImageOptions}, // Specific options structs for image operations
-    models::ImageInspect, // Response struct for inspect_image
-    models::ImageSummary, // Response struct element for list_images
+    models::ImageInspect,                           // Response struct for inspect_image
+    models::ImageSummary,                           // Response struct element for list_images
 };
 use std::collections::HashMap; // For list_images filters
 use tracing::{debug, error, info, instrument, warn}; // Logging utilities
@@ -174,8 +174,12 @@ pub async fn image_exists(name_or_id: &str) -> Result<bool> {
                 "Error during existence check for image '{}': {:?}",
                 name_or_id, e
             );
-            Err(anyhow!(DevrsError::DockerApi { source: e })
-                .context(format!("Failed to check existence for image '{}'", name_or_id)))
+            Err(
+                anyhow!(DevrsError::DockerApi { source: e }).context(format!(
+                    "Failed to check existence for image '{}'",
+                    name_or_id
+                )),
+            )
         }
     }
 }
@@ -208,9 +212,9 @@ pub async fn list_images(
     let docker = connect_docker().await?;
     // Prepare options for the list_images API call.
     let options = Some(ListImagesOptions {
-        all, // Include intermediate layers?
+        all,                                  // Include intermediate layers?
         filters: filters.unwrap_or_default(), // Use provided filters or an empty map.
-        ..Default::default() // Use defaults for other options (e.g., digests).
+        ..Default::default()                  // Use defaults for other options (e.g., digests).
     });
 
     // Log the action being taken.
@@ -251,9 +255,9 @@ pub async fn remove_image(name_or_id: &str, force: bool) -> Result<()> {
     // Establish connection to Docker daemon.
     let docker = connect_docker().await?;
     info!("Removing image '{}' (Force: {})...", name_or_id, force); // Log action.
-    // Prepare options for the remove_image API call.
+                                                                    // Prepare options for the remove_image API call.
     let options = Some(RemoveImageOptions {
-        force, // Force removal?
+        force,          // Force removal?
         noprune: false, // Set true to *prevent* removal of untagged parent layers. Default false is usually desired.
     });
 

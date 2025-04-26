@@ -60,7 +60,10 @@ use anyhow::Context;
 use clap::Parser;
 use serde::Deserialize;
 use std::net::IpAddr;
-use std::{env, fs, path::PathBuf};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 use tracing::{debug, info, warn};
 
 /// The expected name for the server-specific configuration file.
@@ -190,7 +193,7 @@ pub async fn load_and_merge_config(args: SrvArgs) -> Result<ServerConfig> {
     // Start with configuration directly derived from command-line arguments.
     let mut effective_config = ServerConfig::from_args(&args);
     let initial_dir_from_args = args.directory.clone();
-    let cli_defaults = SrvArgs::parse_from(&[""]); // Get defaults for comparison
+    let cli_defaults = SrvArgs::parse_from([""]); // Get defaults for comparison
 
     // Resolve the potential location of the config file based on the input directory.
     let config_search_dir = if initial_dir_from_args.is_absolute() {
@@ -239,7 +242,6 @@ pub async fn load_and_merge_config(args: SrvArgs) -> Result<ServerConfig> {
         // Directory: The directory loaded from the file is already resolved relative to the file.
         // This becomes the base directory if a config file was loaded.
         effective_config.directory = file_config.directory;
-
     } else {
         // No config file found or loaded. Use the directory specified in args.
         // `effective_config.directory` already holds `args.directory` from `from_args`.
@@ -263,8 +265,8 @@ impl Default for ServerConfig {
             port: 8000,
             host: std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST), // Default to 127.0.0.1
             directory: PathBuf::from("."), // Default to current directory
-            enable_cors: true,              // CORS enabled by default
-            show_hidden: false,             // Hidden files disabled by default
+            enable_cors: true,             // CORS enabled by default
+            show_hidden: false,            // Hidden files disabled by default
             index_file: "index.html".to_string(), // Standard index file name
         }
     }
@@ -291,7 +293,8 @@ impl Default for ServerConfig {
 ///     - `Ok(Some(config))` if the file was found and parsed successfully.
 ///     - `Ok(None)` if the file was not found.
 ///     - `Err(_)` if the file was found but could not be read or parsed (e.g., invalid TOML, permissions issue).
-fn load_config_from_dir(search_dir: &PathBuf) -> Result<Option<ServerConfig>> {
+fn load_config_from_dir(search_dir: &Path) -> Result<Option<ServerConfig>> {
+    // ... function body remains the same ...
     let config_path = search_dir.join(CONFIG_FILE_NAME);
 
     // Check if the configuration file exists and is actually a file.
@@ -379,7 +382,7 @@ impl ServerConfig {
             port: args.port,
             host: args.host,
             directory: args.directory.clone(), // Clone the PathBuf from args.
-            enable_cors: !args.no_cors, // `enable_cors` is true if `no_cors` is false.
+            enable_cors: !args.no_cors,        // `enable_cors` is true if `no_cors` is false.
             show_hidden: args.show_hidden,
             index_file: args.index.clone(), // Clone the index file string.
         }
@@ -435,7 +438,10 @@ impl ServerConfig {
                         }
                         // Successfully validated, update the config's directory path.
                         self.directory = canonical_path;
-                        debug!("Resolved serving directory to: {}", self.directory.display());
+                        debug!(
+                            "Resolved serving directory to: {}",
+                            self.directory.display()
+                        );
                     }
                     Err(e) => {
                         // Failed to get metadata even after canonicalization (permissions?).
@@ -496,7 +502,7 @@ mod tests {
             directory: PathBuf::from("/test/dir"),
             port: 9000,
             host: "0.0.0.0".parse().unwrap(),
-            no_cors: true,    // Should result in enable_cors: false
+            no_cors: true,     // Should result in enable_cors: false
             show_hidden: true, // Should result in show_hidden: true
             index: "default.htm".to_string(),
         };
@@ -622,12 +628,12 @@ mod tests {
 
         // Simulate CLI args: Some explicit, some left at default.
         let args = SrvArgs {
-            directory: dir_path.clone(),      // Explicitly point to dir containing the config file
-            port: 8000,                       // CLI uses default port
+            directory: dir_path.clone(), // Explicitly point to dir containing the config file
+            port: 8000,                  // CLI uses default port
             host: Ipv4Addr::LOCALHOST.into(), // CLI uses default host
-            no_cors: true,                    // Explicitly set --no-cors (overrides file)
-            show_hidden: false,               // CLI uses default hidden file setting
-            index: "index.html".into(),       // CLI uses default index file
+            no_cors: true,               // Explicitly set --no-cors (overrides file)
+            show_hidden: false,          // CLI uses default hidden file setting
+            index: "index.html".into(),  // CLI uses default index file
         };
 
         // Perform the load and merge operation.

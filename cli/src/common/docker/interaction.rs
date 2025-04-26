@@ -81,9 +81,9 @@ use bollard::{
 };
 use futures_util::StreamExt; // Required for processing streams (like logs or exec output)
 use std::{
-    default::Default, // For default struct initializers
+    default::Default,  // For default struct initializers
     io::{self, Write}, // Standard IO traits (used for stdout flushing)
-    time::Duration, // For specifying delays (e.g., after starting container)
+    time::Duration,    // For specifying delays (e.g., after starting container)
 };
 use tokio::{
     io::{copy, stderr, stdin, stdout, AsyncWriteExt}, // Async IO operations
@@ -185,14 +185,14 @@ pub async fn exec_in_container(
     // --- Create Exec Instance ---
     // Define options for the Docker `exec_create` API call.
     let exec_options = CreateExecOptions {
-        attach_stdout: Some(true),           // Always attach stdout.
-        attach_stderr: Some(true),           // Always attach stderr.
-        attach_stdin: Some(interactive),     // Attach stdin only if interactive flag is true.
-        tty: Some(tty),                      // Allocate TTY if tty flag is true.
-        cmd: Some(cmd.to_vec()),             // The command and arguments to run.
+        attach_stdout: Some(true),              // Always attach stdout.
+        attach_stderr: Some(true),              // Always attach stderr.
+        attach_stdin: Some(interactive),        // Attach stdin only if interactive flag is true.
+        tty: Some(tty),                         // Allocate TTY if tty flag is true.
+        cmd: Some(cmd.to_vec()),                // The command and arguments to run.
         working_dir: workdir.map(String::from), // Optional working directory.
-        user: user.map(String::from),        // Optional user.
-        ..Default::default()                 // Use defaults for other options (e.g., Env).
+        user: user.map(String::from),           // Optional user.
+        ..Default::default()                    // Use defaults for other options (e.g., Env).
     };
 
     // Make the API call to create the exec instance.
@@ -224,8 +224,7 @@ pub async fn exec_in_container(
         .start_exec(&exec_id, None) // No specific start options needed here.
         .await
         .map_err(|e| {
-            anyhow!(DevrsError::DockerApi { source: e })
-                .context("Failed to start exec instance")
+            anyhow!(DevrsError::DockerApi { source: e }).context("Failed to start exec instance")
         })?;
 
     // Process the result of starting the exec instance.
@@ -243,7 +242,7 @@ pub async fn exec_in_container(
             let stdin_handle = if interactive {
                 task::spawn(async move {
                     let mut host_stdin = stdin(); // Get handle to host stdin.
-                    // Copy bytes asynchronously.
+                                                  // Copy bytes asynchronously.
                     match copy(&mut host_stdin, &mut input).await {
                         Ok(n) => debug!("Exec stdin stream finished after {} bytes.", n),
                         // Ignore BrokenPipe errors, common when remote end closes.
@@ -350,10 +349,12 @@ pub async fn exec_in_container(
                         "Failed to inspect exec instance '{}' to get exit code: {}",
                         exec_id, e
                     );
-                    Err(anyhow!(DevrsError::DockerApi { source: e }).context(format!(
-                        "Failed to inspect exec instance '{}' after execution",
-                        exec_id
-                    )))
+                    Err(
+                        anyhow!(DevrsError::DockerApi { source: e }).context(format!(
+                            "Failed to inspect exec instance '{}' after execution",
+                            exec_id
+                        )),
+                    )
                 }
             }
         }
@@ -422,12 +423,12 @@ pub async fn get_container_logs(name_or_id: &str, follow: bool, tail: Option<&st
 
     // Configure options for the Docker `logs` API call.
     let options = LogsOptions {
-        stdout: true,      // Include stdout stream.
-        stderr: true,      // Include stderr stream.
-        follow,            // Follow new logs?
-        tail: tail_owned,  // Number of lines from the end (or "all").
-        timestamps: true, // Include timestamps in the log output.
-        ..Default::default() // Use defaults for other options (e.g., since, until).
+        stdout: true,         // Include stdout stream.
+        stderr: true,         // Include stderr stream.
+        follow,               // Follow new logs?
+        tail: tail_owned,     // Number of lines from the end (or "all").
+        timestamps: true,     // Include timestamps in the log output.
+        ..Default::default()  // Use defaults for other options (e.g., since, until).
     };
 
     // Get the log stream from the Docker API.

@@ -17,18 +17,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable # Uses the stable Rust toolchain
         with:
           components: clippy # Optionally install clippy
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2 # Cache cargo registry, index, build outputs
 
+      # --- Added: Install System Dependencies ---
+      - name: Install Neovim, Git, and Docker
+        run: |
+          sudo apt-get update -y
+          # Remove conflicting package if present
+          sudo apt-get remove -y containerd containerd.io || true
+          # Install required packages
+          sudo apt-get install -y git neovim docker.io
+
+      # --- End Added Section ---
+
       - name: Run tests
         # Use --workspace because you have multiple crates (e.g., cli)
-        run: cargo test --workspace --all-targets
+        # Add -- --ignored if you want to run ignored tests (like Docker interaction tests)
+        run: cargo test --workspace --all-targets --verbose
 
       # Optional: Add linting check
       - name: Run Linter (Clippy)
@@ -37,3 +50,4 @@ jobs:
       # Optional: Add formatting check
       - name: Check Formatting (fmt)
         run: cargo fmt --all --check
+

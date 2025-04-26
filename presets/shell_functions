@@ -1,0 +1,1212 @@
+#!/bin/bash
+# vim: ft=sh
+
+# ============================================================ #
+# DevRS Shared Shell Functions and Aliases                     #
+# ============================================================ #
+# File: presets/shell_functions
+# Author: Christi Mahu
+# Repository: https://github.com/christimahu/devrs
+#
+# **DISCLAIMER:** This repository is in the early phases of being rewritten
+# and is not suitable for production development yet.
+#
+# ## Overview
+#
+# This file contains utility functions and aliases intended for use
+# both on the host machine and inside the DevRS core development environment.
+# It should be sourced by your shell configuration file (e.g., ~/.bashrc, ~/.zshrc)
+# after running `devrs setup integrate` and following its instructions.
+#
+# ## Architecture
+#
+# The file is organized into logical sections:
+# 1. PATH Management - Conditional additions to user PATH
+# 2. Common Command Aliases - Shortcuts for frequently used commands
+# 3. File and Directory Utilities - Functions for file/directory operations
+# 4. Git Utilities - Tools to enhance Git workflow
+# 5. C++ Helpers - CMake project watchers and builders
+# 6. GCP Utilities - Google Cloud Platform helpers
+# 7. Terraform Utilities - Terraform workflow shortcuts
+#
+# ## Usage
+#
+# ```bash
+# # Integrate with your shell (first-time setup)
+# devrs setup integrate
+#
+# # Source manually if needed
+# source ~/.local/share/devrs/presets/shell_functions
+# ```
+#
+# Refer to each section's documentation for function-specific usage examples.
+# ============================================================ #
+
+# ============================================================ #
+# PATH Management                                              #
+# ============================================================ #
+# Purpose: Ensures essential local binary directories are included in the PATH
+#          if they are not already present. This avoids overriding user customizations
+#          while ensuring tools installed via Cargo or locally are findable.
+
+# Function: _add_to_path_if_missing
+# Purpose: Internal helper to prepend a directory to the PATH environment variable
+#          only if the directory exists and is not already included in the PATH.
+# Arguments:
+#   $1: The directory path to conditionally add to PATH
+# Behavior:
+#   1. Checks if the directory exists on disk
+#   2. Uses pattern matching to safely check if the directory is already in PATH
+#   3. Only modifies PATH if necessary to avoid duplication
+# Usage: _add_to_path_if_missing "/path/to/add"
+_add_to_path_if_missing() {
+    local dir_to_add="$1"
+    if [ -d "$dir_to_add" ]; then
+        # Using pattern matching with colons around PATH prevents partial matches
+        # (e.g., /usr/bin matching /usr/bin/local)
+        case ":$PATH:" in
+            *":${dir_to_add}:"*) 
+                # Already present, no action needed
+                ;;
+            *) 
+                # Not present, prepend it to PATH
+                export PATH="$dir_to_add:$PATH"
+                ;;
+        esac
+    fi
+}
+
+# Apply Conditional PATH Additions
+# These ensure user-specific bin directories are prioritized if they exist.
+
+# Add ~/.local/bin (common for pip user installs, etc.)
+_add_to_path_if_missing "$HOME/.local/bin"
+
+# Add ~/.cargo/bin (standard Rust toolchain location)
+_add_to_path_if_missing "$HOME/.cargo/bin"
+
+# Add standard Go paths if they exist
+_add_to_path_if_missing "/usr/local/go/bin"  # Common system-wide Go install location
+_add_to_path_if_missing "$HOME/go/bin"       # Common user Go workspace bin location
+
+# ============================================================ #
+# Common Command Aliases                                       #
+# ============================================================ #
+# Purpose: These aliases provide intuitive shortcuts for commonly used commands,
+#          ensuring modern versions of tools are used by default and adding
+#          helpful flags to command-line utilities.
+#
+# Workflow:
+#   1. These are automatically applied when the file is sourced
+#   2. They override the basic commands with enhanced versions
+#   3. Original commands can still be accessed with \command (e.g., \python)
+
+# Python Aliases
+# --------------
+# Purpose: Ensure 'python' command invokes Python 3 rather than legacy Python 2
+# Usage: python script.py
+# Note: Many systems now have both python2 and python3, this ensures modern Python
+alias python="python3"
+
+# Purpose: Ensure 'pip' command invokes pip for Python 3
+# Usage: pip install <package>
+# Note: This prevents accidentally installing packages to the Python 2 environment
+alias pip="pip3"
+
+# Editor Aliases
+# -------------
+# Purpose: Use Neovim ('nvim') when 'vim' is typed for enhanced editing experience
+# Usage: vim file.txt
+# Note: Maintains muscle memory while using the newer Neovim editor
+alias vim="nvim"
+
+# Git Aliases
+# ----------
+# Purpose: Shortcut for invoking git difftool for visual comparison
+# Usage: ghdf <commit1> <commit2> -- <file>
+# Note: Makes visual diffing much more convenient than standard git diff
+alias ghdf="git difftool"
+
+# Search Aliases
+# -------------
+# Purpose: Enhanced grep with recursive search (-r), line numbers (-n),
+#          and automatic color highlighting for better readability
+# Usage: gp 'search_term' /path/to/search
+# Note: Dramatically improves grep output readability and usefulness
+alias gp='grep -rn --color=auto'
+
+# Purpose: Case-insensitive version of enhanced grep with the -i flag
+# Usage: gpi 'search_term' /path/to/search
+# Note: Perfect for situations where case variations should be ignored
+alias gpi='grep -rni --color=auto'
+
+# ============================================================ #
+# File and Directory Utilities                                 #
+# ============================================================ #
+# Purpose: These functions enhance file and directory operations with
+#          intelligent defaults and simplified command structures.
+#
+# Note: The HTTP server functionality has been moved to the DevRS CLI
+#       and is now accessible via `devrs srv` command.
+
+# TAR Archive Utilities
+# ---------------------
+# Purpose: These functions simplify creating and extracting tar archives with sensible
+#          defaults and clear feedback. They handle common use cases like extracting
+#          an archive to a named folder or creating archives with automatic naming.
+
+# Function: untarfolder
+# Purpose: Extracts a '.tar.gz' archive into a directory named after the archive (without extension).
+# Workflow:
+#   1. Validates that an archive file was provided and exists
+#   2. Creates a target directory based on the archive name (removing .tar.gz)
+#   3. Extracts the archive contents into the target directory
+#   4. Provides clear success/failure feedback
+#
+# Usage: untarfolder ARCHIVE.tar.gz
+# Example:
+#   # Extract project-v1.2.tar.gz into a directory called project-v1.2/
+#   untarfolder project-v1.2.tar.gz
+untarfolder() { 
+    # Validate input arguments
+    if [ -z "$1" ]; then
+        echo "Usage: untarfolder ARCHIVE.tar.gz"
+        return 1
+    fi
+    
+    # Ensure the file exists
+    if [ ! -f "$1" ]; then
+        echo "Error: File '$1' not found."
+        return 1
+    fi
+    
+    # Provide a warning if the file doesn't have the expected extension
+    if [[ "$1" != *.tar.gz ]]; then
+        echo "Warning: File '$1' does not end with .tar.gz. Attempting extraction anyway."
+    fi
+    
+    # Create the target directory name by removing '.tar.gz' suffix
+    # Uses parameter expansion: ${VAR%.SUFFIX} removes shortest matching suffix
+    local target_dir="${1%.tar.gz}"
+    echo "Extracting '$1' to directory '$target_dir'..."
+    
+    # Create the target directory (-p) and extract (-x) the gzipped (-z) archive (-f)
+    # into the target directory (-C)
+    mkdir -p "$target_dir" && tar -xzf "$1" -C "$target_dir"
+    local exit_code=$?
+    
+    # Provide feedback based on success/failure
+    if [ $exit_code -eq 0 ]; then
+        echo "Extraction complete."
+    else
+        echo "Error during extraction (tar exit code: $exit_code)."
+    fi
+    
+    # Return the tar command's exit code
+    return $exit_code
+}
+
+# Function: tarfolder
+# Purpose: Creates a '.tar.gz' archive from a specified directory with smart naming.
+# Workflow:
+#   1. Validates the directory exists
+#   2. Uses automatic naming if archive name not provided
+#   3. Creates a compressed archive with clear progress indicators
+#   4. Reports the final archive size upon success
+#
+# Usage: tarfolder DIRECTORY [ARCHIVE_NAME]
+# Examples:
+#   # Create my-project.tar.gz from the my-project directory
+#   tarfolder my-project
+#
+#   # Create backup-2023.tar.gz from the my-project directory
+#   tarfolder my-project backup-2023.tar.gz
+tarfolder() {
+    # Validate input arguments
+    if [ -z "$1" ]; then
+        echo "Usage: tarfolder DIRECTORY [ARCHIVE_NAME]"
+        return 1
+    fi
+    
+    # Get the source directory and determine archive name
+    local dir="$1"
+    # Default archive name is directory_name.tar.gz if not specified
+    # ${dir%/} removes a trailing slash, if present
+    local archive="${2:-${dir%/}.tar.gz}"
+    
+    # Ensure the source directory exists
+    if [ ! -d "$dir" ]; then
+        echo "Error: Directory '$dir' does not exist"
+        return 1
+    fi
+    
+    # Create the archive, showing progress
+    echo "Creating archive '$archive' from directory '$dir'..."
+    # Create (-c) a gzipped (-z) archive file (-f)
+    tar -czf "$archive" "$dir"
+    local exit_code=$?
+    
+    # Provide feedback based on success/failure
+    if [ $exit_code -eq 0 ]; then
+        # Report success and archive size (human-readable format using du -h)
+        echo "Done! Archive size: $(du -h "$archive" | cut -f1)"
+    else
+        echo "Error during archiving (tar exit code: $exit_code)."
+    fi
+    
+    # Return the tar command's exit code
+    return $exit_code
+}
+
+# Directory Tree Visualization
+# ---------------------------
+# Purpose: Provides a cross-platform directory tree visualization that mimics the Linux 'tree'
+#          command. Uses the system 'tree' command on Linux if available, falling back to a
+#          custom shell implementation on other systems (e.g., macOS).
+#
+# Features:
+#   - Color-coded output (directories in blue)
+#   - Support for hiding/showing hidden files
+#   - Depth limiting for large directory structures
+#   - Pattern-based exclusion of files/directories
+#   - Clean box-drawing characters for visual hierarchy
+# 
+# Usage: tree [OPTIONS] [DIRECTORY]
+# Options:
+#   -a             Show hidden files (starting with '.')
+#   -L LEVEL       Limit depth of directory display
+#   -I PATTERN     Exclude files matching PATTERN (basic wildcard)
+#
+# Examples:
+#   # Display structure of current directory
+#   tree
+#
+#   # Show all files (including hidden) in the src directory
+#   tree -a src
+#
+#   # Display only first two levels of the project, excluding .git directory
+#   tree -L 2 -I '.git' my-project
+tree() {
+    # Platform detection: Use native tree for Linux (better performance and features)
+    if command -v tree >/dev/null 2>&1 && [[ "$(uname)" = "Linux" ]]; then
+        # Pass through all arguments to system tree with colorization (-C)
+        command tree -C "$@"
+        return $?
+    fi
+    
+    # --- Custom Fallback Implementation for non-Linux platforms ---
+    
+    # Initialize local variables for argument parsing
+    local exclude=""         # Pattern to exclude (-I)
+    local show_hidden=0      # Flag for hidden files (-a)
+    local max_depth=0        # Maximum display depth (-L), 0 means unlimited
+    local target_dir=""      # Directory to visualize
+    local arg_index=1        # Current argument position
+    
+    # --- Argument Parsing Logic ---
+    while [[ $arg_index -le $# ]]; do
+        local arg="${!arg_index}"
+        case "$arg" in
+            -I) # Exclude pattern
+                if [[ $((arg_index + 1)) -le $# ]]; then
+                    arg_index=$((arg_index + 1))
+                    exclude="${!arg_index}"
+                else
+                    echo "tree: Error: Option '-I' requires a pattern." >&2
+                    return 1
+                fi
+                ;;
+            -a) # Show hidden files
+                show_hidden=1
+                ;;
+            -L) # Depth limit
+                if [[ $((arg_index + 1)) -le $# ]]; then
+                    arg_index=$((arg_index + 1))
+                    if [[ "${!arg_index}" =~ ^[0-9]+$ ]]; then
+                        max_depth="${!arg_index}"
+                    else
+                        echo "tree: Error: Invalid level for -L: '${!arg_index}'" >&2
+                        return 1
+                    fi
+                else
+                    echo "tree: Error: Option '-L' requires a level number." >&2
+                    return 1
+                fi
+                ;;
+            -*) # Unknown option
+                echo "tree: Error: Invalid option: '$arg'" >&2
+                echo "Usage: tree [-a] [-L level] [-I pattern] [directory]" >&2
+                return 1
+                ;;
+            *) # Directory argument (positional)
+                if [[ -z "$target_dir" ]]; then
+                    target_dir="$arg"
+                else
+                    echo "tree: Error: Too many directories specified." >&2
+                    return 1
+                fi
+                ;;
+        esac
+        arg_index=$((arg_index + 1))
+    done
+    
+    # Default to current directory if not specified
+    target_dir="${target_dir:-.}"
+    
+    # Validate target directory exists
+    if [ ! -d "$target_dir" ]; then
+        echo "tree: Error: Directory '$target_dir' not found." >&2
+        return 1
+    fi
+    
+    # Print root directory name
+    echo "$target_dir"
+    
+    # --- Recursive Directory Processing Function ---
+    # This is the core of the tree visualization, handling the recursive traversal
+    # and formatted output with proper indentation and branch characters.
+    process_dir() {
+        local current_dir="$1"    # Directory to process
+        local prefix="$2"         # Prefix string (indentation and branch chars)
+        local depth="$3"          # Current recursion depth
+        
+        # Respect maximum depth limit if set
+        if [[ $max_depth -gt 0 && $depth -ge $max_depth ]]; then
+            return
+        fi
+        
+        # Get all files/dirs in the directory using find + sort
+        # This handles filenames with special characters properly
+        local entries=()
+        while IFS= read -r -d $'\0' entry; do
+            entries+=("$entry")
+        done < <(find "$current_dir" -mindepth 1 -maxdepth 1 -print0 | sort -z)
+        
+        local total=${#entries[@]}  # Total number of entries
+        local count=0               # Current entry counter
+        
+        # --- Process each entry ---
+        for entry in "${entries[@]}"; do
+            count=$((count+1))
+            local basename=$(basename "$entry")
+            
+            # --- Apply filters ---
+            # Skip hidden files unless -a is specified
+            if [[ "$basename" == .* && $show_hidden -eq 0 ]]; then
+                continue
+            fi
+            
+            # Skip entries matching the exclude pattern
+            if [[ -n "$exclude" && "$basename" == $exclude ]]; then
+                continue
+            fi
+            
+            # Skip version control directories by default
+            if [[ "$basename" == ".git" || "$basename" == ".hg" || "$basename" == ".svn" ]]; then
+                continue
+            fi
+            
+            # --- Determine tree connectors ---
+            # Use different connectors for items in the middle vs. the last item
+            local connector="├── "            # Mid-item connector
+            local next_prefix="$prefix│   "   # Mid-item prefix for child items
+            
+            if [[ $count -eq $total ]]; then
+                connector="└── "              # Last-item connector
+                next_prefix="$prefix    "     # Last-item prefix for child items (spaces align)
+            fi
+            
+            # --- Print formatted output ---
+            if [[ -d "$entry" ]]; then
+                # Directory: Show in bold blue with trailing slash
+                printf "%s%s\033[1;34m%s/\033[0m\n" "$prefix" "$connector" "$basename"
+                # Recurse into subdirectory
+                process_dir "$entry" "$next_prefix" $((depth+1))
+            else
+                # Regular file: Standard formatting
+                printf "%s%s%s\n" "$prefix" "$connector" "$basename"
+            fi
+        done
+    }
+    
+    # Start the recursive processing from the target directory
+    process_dir "$target_dir" "" 0
+}
+
+# ============================================================ #
+# Git Utilities                                                #
+# ============================================================ #
+# Purpose: These functions enhance Git workflow by automating common
+#          repository maintenance tasks that otherwise require multiple
+#          manual steps.
+
+# Function: ghprune
+# Purpose: Cleans up local Git branches that no longer exist on the remote
+#          origin, helping keep local repositories tidy and preventing work
+#          on obsolete branches.
+#
+# Workflow:
+#   1. Checks if user is on the default branch (main/master)
+#   2. Fetches latest state from remote and prunes remote references
+#   3. Identifies local branches that no longer exist on remote
+#   4. Skips protected branches (main, master, develop)
+#   5. Interactively prompts for confirmation before deletion
+#   6. Handles unmerged branches with separate force delete prompt
+#
+# Usage: ghprune
+#
+# Example workflow:
+#   $ ghprune
+#   Pruning local Git branches...
+#   Checking for local branches that no longer exist on the remote...
+#   Found local branches with no matching remote:
+#     feature/old-feature
+#     bugfix/obsolete-fix
+#   
+#   Delete branch 'feature/old-feature'? [y/N] y
+#   Deleted feature/old-feature.
+#   Delete branch 'bugfix/obsolete-fix'? [y/N] y
+#   Branch 'bugfix/obsolete-fix' is not fully merged. Force delete? [y/N] n
+#   Skipped bugfix/obsolete-fix.
+ghprune() {
+    echo "Pruning local Git branches..."
+
+    # 1. Check Preconditions
+    local current_branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [ $? -ne 0 ]; then 
+        echo "Error: Not a git repository." 
+        return 1 
+    fi
+
+    local default_branch
+    default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5 2>/dev/null)
+    if [ -z "$default_branch" ]; then # Fallback logic
+        if git show-ref --verify --quiet refs/heads/main; then 
+            default_branch="main"
+        elif git show-ref --verify --quiet refs/heads/master; then 
+            default_branch="master"
+        else 
+            echo "Error: Could not determine default branch (main/master)." 
+            return 1
+        fi
+        echo "Warning: Assuming default branch is '$default_branch'."
+    fi
+
+    # Check if currently on the default branch
+    if [[ "$current_branch" != "$default_branch" ]]; then
+        echo "Error: Must be on the default branch ('$default_branch') to prune." 
+        echo "Please run:" 
+        echo "  git checkout $default_branch" 
+        echo "  git pull origin $default_branch" 
+        echo "Then run 'ghprune' again." 
+        return 1
+    fi
+
+    # Check for uncommitted changes
+    if ! git diff-index --quiet HEAD --; then
+        echo "Error: Uncommitted changes present. Commit or stash first." 
+        return 1
+    fi
+    echo "Current branch '$current_branch' is clean."
+    
+    # Fetch from remote and prune remote-tracking references
+    echo "Fetching latest state from remote and pruning references..."
+    git fetch --prune
+    if [ $? -ne 0 ]; then 
+        echo "Error: fetch failed." 
+        return 1 
+    fi
+    
+    echo "Checking for local branches that no longer exist on the remote..."
+    
+    # Initialize variables
+    local branch
+    local orphaned=()
+    
+    # Find all local branches without matching remote branches
+    for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+        # Check if remote tracking branch exists
+        if ! git rev-parse --verify --quiet "origin/${branch}" > /dev/null; then
+            # Skip protected branches (main, master, develop)
+            if [[ "$branch" != "$default_branch" && "$branch" != "develop" ]]; then
+                orphaned+=("$branch")
+            fi
+        fi
+    done
+    
+    # Early exit if no orphaned branches found
+    if (( ${#orphaned[@]} == 0 )); then
+        echo "No orphaned local branches found."
+        return 0
+    fi
+    
+    # Display list of orphaned branches
+    echo "Found local branches with no matching remote:"
+    for branch in "${orphaned[@]}"; do
+        echo "  $branch"
+    done
+    
+    # Interactive deletion process with shell detection
+    echo
+    for branch in "${orphaned[@]}"; do
+        # Shell-specific read command handling
+        if [ -n "$ZSH_VERSION" ]; then
+            # Zsh-specific syntax
+            read "REPLY?Delete branch '$branch'? [y/N] "
+        else
+            # Bash and others
+            echo -n "Delete branch '$branch'? [y/N] "
+            read REPLY
+        fi
+        
+        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+            # Try normal delete first (requires branch to be fully merged)
+            if git branch -d "$branch"; then
+                echo "Deleted $branch."
+            else
+                # Handle unmerged branches separately with warning
+                if [ -n "$ZSH_VERSION" ]; then
+                    # Zsh-specific syntax
+                    read "FORCE?Branch '$branch' is not fully merged. Force delete? [y/N] "
+                else
+                    # Bash and others
+                    echo -n "Branch '$branch' is not fully merged. Force delete? [y/N] "
+                    read FORCE
+                fi
+                
+                if [[ "$FORCE" =~ ^[Yy]$ ]]; then
+                    git branch -D "$branch" && echo "Force deleted $branch."
+                else
+                    echo "Skipped $branch."
+                fi
+            fi
+        else
+            echo "Skipped $branch."
+        fi
+    done
+    
+    echo "Pruning finished."
+}
+
+# ============================================================ #
+# C++ Helpers                                                  #
+# ============================================================ #
+# Purpose: These functions streamline C++ development workflow by providing
+#          tools for automated building, testing, and continuous integration
+#          within the local development environment.
+
+# Function: cmkw (CMake Watch)
+# Purpose: Watches C++ source/header files for changes and automatically
+#          rebuilds and tests the project whenever a change is detected.
+#          Dramatically improves development velocity with fast feedback.
+#
+# Workflow:
+#   1. Ensures a valid CMake project exists in the current directory
+#   2. Creates and configures a build directory if needed
+#   3. Uses the 'entr' utility to watch for file changes
+#   4. Automatically rebuilds and runs tests when files are modified
+#   5. Shows clear, time-stamped output for each build/test cycle
+#
+# Requirements:
+#   - cmake: For project configuration and building
+#   - ctest: For running tests
+#   - entr: For file watching (install via package manager)
+#
+# Watched files:
+#   - *.cpp, *.h, *.hpp (in src/ and include/ directories)
+#   - CMakeLists.txt (in project root)
+#
+# Usage: cmkw
+#
+# Example:
+#   # Navigate to your CMake project root and activate watching
+#   $ cd ~/projects/my-cpp-project
+#   $ cmkw
+#   # Make changes to your code and see automatic rebuilds
+cmkw() {
+    # Check if running on macOS
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo "Error: cmkw is not supported on macOS. It requires Debian Linux with the following tools:"
+        echo "  - cmake, ctest (apt-get install cmake)"
+        echo "  - entr (apt-get install entr)"
+        return 1
+    fi
+    
+    # Verify project validity
+    if [ ! -f "CMakeLists.txt" ]; then
+        echo "Error: No CMakeLists.txt found in current directory."
+        echo "This function must be run from the root of a CMake project."
+        return 1
+    fi
+    
+    # Check for required tools
+    if ! command -v cmake &>/dev/null; then
+        echo "Error: 'cmake' command not found. Please install CMake."
+        return 1
+    fi
+    
+    if ! command -v ctest &>/dev/null; then
+        echo "Error: 'ctest' command not found. It should be installed with CMake."
+        return 1
+    fi
+    
+    if ! command -v entr &>/dev/null; then
+        echo "Error: 'entr' command not found. Please install entr:"
+        echo "  - Debian/Ubuntu: sudo apt install entr"
+        echo "  - Arch Linux: sudo pacman -S entr"
+        return 1
+    fi
+
+    # Create and configure build directory
+    echo "Setting up build environment..."
+    mkdir -p build
+    cd build || { echo "Error: Failed to enter build directory."; return 1; }
+    
+    # Initial project configuration
+    echo "Configuring CMake project..."
+    cmake .. || { 
+        echo "Error: CMake configuration failed. Please fix CMake errors before watching."; 
+        cd ..; 
+        return 1; 
+    }
+    
+    # Initial build (optional but helpful to catch issues early)
+    echo "Performing initial build..."
+    cmake --build .
+    
+    # Return to project root
+    cd ..
+    
+    echo "Watching for changes in source files..."
+    echo "Press Ctrl+C to stop watching."
+    
+    # Find relevant source files and pipe to entr for watching
+    # The -c flag clears the screen before each command run
+    find ./src ./include . \
+        -type f \( \
+            -name '*.cpp' -o \
+            -name '*.h' -o \
+            -name '*.hpp' -o \
+            -name 'CMakeLists.txt' \
+        \) | entr -c sh -c '
+            # Get current timestamp for build log
+            START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+            
+            # Print build start banner with timestamp
+            echo -e "\n\n========== 🟢 BUILD STARTED: $START_TIME ==========\n"
+            
+            # Navigate to build directory and attempt build
+            (cd build && cmake --build .)
+            BUILD_STATUS=$?
+            
+            # If build succeeds, run tests
+            if [ $BUILD_STATUS -eq 0 ]; then
+                echo -e "\n========== 🧪 RUNNING TESTS ==========\n"
+                (cd build && ctest --output-on-failure)
+                TEST_STATUS=$?
+                
+                # Get completion timestamp
+                END_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+                
+                # Report completion with status
+                if [ $TEST_STATUS -eq 0 ]; then
+                    echo -e "\n========== ✅ BUILD AND TESTS PASSED: $END_TIME =========="
+                else
+                    echo -e "\n========== ❌ BUILD PASSED BUT TESTS FAILED: $END_TIME =========="
+                fi
+            else
+                # Build failed
+                END_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+                echo -e "\n========== ❌ BUILD FAILED: $END_TIME =========="
+            fi
+        '
+}
+
+# ============================================================ #
+# Google Cloud Platform Utilities                              #
+# ============================================================ #
+# Purpose: These functions simplify working with Google Cloud Platform (GCP)
+#          by providing intuitive shortcuts for common operations, local
+#          emulator management, and configuration handling.
+#
+# Note: These functions require the Google Cloud SDK (gcloud) to be installed.
+#       Install from: https://cloud.google.com/sdk/docs/install
+
+# Function: gcpinfo
+# Purpose: Shows current GCP configuration and lists available projects,
+#          providing a quick overview of account status and available resources.
+# Usage: gcpinfo
+gcpinfo() {
+    echo "========== Current GCP Configuration =========="
+    gcloud config list
+    
+    echo -e "\n========== Available GCP Projects =========="
+    gcloud projects list --sort-by=projectId
+    
+    # Additional information about active APIs (optional)
+    local current_project=$(gcloud config get-value project 2>/dev/null)
+    if [ -n "$current_project" ]; then
+        echo -e "\nActive project: $current_project"
+    fi
+}
+
+# Function: gcpproject
+# Purpose: Quickly switch between GCP projects without having to remember
+#          the full gcloud command syntax.
+# Usage: gcpproject PROJECT_ID
+gcpproject() {
+    if [ -z "$1" ]; then
+        echo "Usage: gcpproject PROJECT_ID"
+        local current_project=$(gcloud config get-value project 2>/dev/null)
+        if [ -n "$current_project" ]; then
+            echo "Current project: $current_project"
+        else 
+            echo "No project currently selected."
+        fi
+        echo -e "\nAvailable projects:"
+        gcloud projects list --sort-by=projectId
+        return 1
+    fi
+    
+    local project_id="$1"
+    echo "Setting active GCP project to: $project_id"
+    
+    if gcloud config set project "$project_id"; then
+        echo "✅ Successfully switched to project: $project_id"
+    else
+        echo "❌ Error: Failed to set project to '$project_id'."
+        echo "Check that the project ID is correct and that you have access to it."
+        return 1
+    fi
+}
+
+# Function: gcpappcreate
+# Purpose: Creates a new App Engine application in the specified region,
+#          setting up the foundation for serverless applications.
+# Usage: gcpappcreate [REGION]
+gcpappcreate() {
+    local region=${1:-us-central}
+    
+    echo "Creating App Engine application in region: $region"
+    echo "This operation can only be performed once per project and cannot be undone."
+    
+    # Check if App Engine already exists in this project
+    if gcloud app describe &>/dev/null; then
+        echo "❌ App Engine app already exists in this project."
+        return 1
+    fi
+    
+    # Create the App Engine application
+    if gcloud app create --region="$region"; then
+        echo "✅ App Engine application created successfully in region: $region"
+    else
+        echo "❌ Failed to create App Engine application."
+        return 1
+    fi
+}
+
+# Function: gcpappdeploy
+# Purpose: Streamlines deployment of applications to App Engine with sensible
+#          defaults and simplified commands.
+# Usage: gcpappdeploy [VERSION] [YAML_FILE]
+gcpappdeploy() {
+    # Default version is a timestamp (YYYYMMDDHHMMSS)
+    local version=${1:-$(date +%Y%m%d%H%M%S)}
+    # Default configuration file is app.yaml
+    local yaml=${2:-app.yaml}
+    
+    # Validate configuration file exists
+    if [ ! -f "$yaml" ]; then
+        echo "❌ Error: Configuration file '$yaml' not found"
+        echo "Make sure you're in the correct directory or specify the path."
+        return 1
+    fi
+    
+    # Get the current project
+    local project=$(gcloud config get-value project 2>/dev/null)
+    echo "Deploying to App Engine in project: $project"
+    echo "Version: $version"
+    echo "Using configuration: $yaml"
+    
+    # Deploy the application
+    if gcloud app deploy "$yaml" --version="$version" --quiet; then
+        echo "✅ Deployment successful!"
+        echo "Your application should be accessible at: https://$version-dot-$project.appspot.com"
+    else
+        echo "❌ Deployment failed. Check the error messages above."
+        return 1
+    fi
+}
+
+# Function: gcpstoragestart
+# Purpose: Starts the Cloud Storage emulator for local development, allowing
+#          for offline testing of storage functionality.
+# Usage: gcpstoragestart [PORT]
+gcpstoragestart() {
+    local port=${1:-8888}
+    
+    # Check for beta components
+    if ! gcloud components list --filter="id:beta" --format="value(state.name)" | grep -q "Installed"; then
+        echo "⚠️ Warning: gcloud beta components not found"
+        echo "Run 'gcloud components install beta' to install the required components."
+    fi
+    
+    echo "Starting Cloud Storage emulator on localhost:$port"
+    echo "Press Ctrl+C to stop the emulator"
+    gcloud beta emulators storage start --host-port=localhost:$port
+}
+
+# Function: gcpdatastorestart
+# Purpose: Starts the Datastore emulator for local development, enabling
+#          local testing of applications that use Datastore.
+# Usage: gcpdatastorestart [PORT]
+gcpdatastorestart() {
+    local port=${1:-8081}
+    
+    # Check for beta components
+    if ! gcloud components list --filter="id:beta" --format="value(state.name)" | grep -q "Installed"; then
+        echo "⚠️ Warning: gcloud beta components not found"
+        echo "Run 'gcloud components install beta' to install the required components."
+    fi
+    
+    echo "Starting Datastore emulator on localhost:$port"
+    echo "Press Ctrl+C to stop the emulator"
+    gcloud beta emulators datastore start --host-port=localhost:$port
+}
+
+# Function: gcppubsubstart
+# Purpose: Starts the Pub/Sub emulator for local development, enabling local
+#          testing of applications that use Pub/Sub messaging.
+# Usage: gcppubsubstart [PORT]
+gcppubsubstart() {
+    local port=${1:-8085}
+    
+    # Check for beta components
+    if ! gcloud components list --filter="id:beta" --format="value(state.name)" | grep -q "Installed"; then
+        echo "⚠️ Warning: gcloud beta components not found"
+        echo "Run 'gcloud components install beta' to install the required components."
+    fi
+    
+    echo "Starting Pub/Sub emulator on localhost:$port"
+    echo "Press Ctrl+C to stop the emulator"
+    gcloud beta emulators pubsub start --host-port=localhost:$port
+}
+
+# Function: gcpfirestorestart
+# Purpose: Starts the Firestore emulator for local development, enabling
+#          local testing of applications that use Firestore database.
+# Usage: gcpfirestorestart [PORT]
+gcpfirestorestart() {
+    local port=${1:-8080}
+    
+    # Check for beta components
+    if ! gcloud components list --filter="id:beta" --format="value(state.name)" | grep -q "Installed"; then
+        echo "⚠️ Warning: gcloud beta components not found"
+        echo "Run 'gcloud components install beta' to install the required components."
+    fi
+    
+    echo "Starting Firestore emulator on localhost:$port"
+    echo "Note: Port 8080 is commonly used by other services. If you see port conflicts, try a different port."
+    echo "Press Ctrl+C to stop the emulator"
+    gcloud beta emulators firestore start --host-port=localhost:$port
+}
+
+# Function: gcpemulatorsstart
+# Purpose: Starts all GCP emulators (Datastore, Pub/Sub, Firestore, Storage)
+#          in separate terminal sessions for comprehensive local development.
+# Usage: gcpemulatorsstart
+gcpemulatorsstart() {
+    echo "Starting all GCP emulators in separate terminal sessions..."
+    
+    # Check for terminal emulators
+    local terminal=""
+    if command -v gnome-terminal &>/dev/null; then
+        terminal="gnome-terminal"
+    elif command -v xterm &>/dev/null; then
+        terminal="xterm"
+    elif command -v konsole &>/dev/null; then
+        terminal="konsole"
+    elif command -v terminal &>/dev/null; then
+        terminal="terminal"  # macOS
+    else
+        echo "❌ Unable to find a supported terminal emulator."
+        echo "Please start the emulators individually using these commands:"
+        echo "  gcpdatastorestart"
+        echo "  gcppubsubstart"
+        echo "  gcpfirestorestart"
+        echo "  gcpstoragestart"
+        return 1
+    fi
+    
+    # Start emulators in separate terminals
+    case $terminal in
+        "gnome-terminal")
+            gnome-terminal -- bash -c "gcpdatastorestart; bash"
+            gnome-terminal -- bash -c "gcppubsubstart; bash"
+            gnome-terminal -- bash -c "gcpfirestorestart; bash"
+            gnome-terminal -- bash -c "gcpstoragestart; bash"
+            ;;
+        "xterm")
+            xterm -e "bash -c 'gcpdatastorestart; bash'" &
+            xterm -e "bash -c 'gcppubsubstart; bash'" &
+            xterm -e "bash -c 'gcpfirestorestart; bash'" &
+            xterm -e "bash -c 'gcpstoragestart; bash'" &
+            ;;
+        "konsole")
+            konsole -e bash -c "gcpdatastorestart; bash" &
+            konsole -e bash -c "gcppubsubstart; bash" &
+            konsole -e bash -c "gcpfirestorestart; bash" &
+            konsole -e bash -c "gcpstoragestart; bash" &
+            ;;
+        "terminal")  # macOS
+            terminal -e "bash -c 'gcpdatastorestart; bash'" &
+            terminal -e "bash -c 'gcppubsubstart; bash'" &
+            terminal -e "bash -c 'gcpfirestorestart; bash'" &
+            terminal -e "bash -c 'gcpstoragestart; bash'" &
+            ;;
+    esac
+    
+    echo "✅ Started all emulators. Check the terminal windows for details."
+    echo "Remember to set appropriate environment variables in your application."
+}
+
+# Function: gcpbucketcreate
+# Purpose: Creates a new Google Cloud Storage bucket with simplified syntax
+#          and automatic gs:// prefix handling.
+# Usage: gcpbucketcreate BUCKET_NAME [LOCATION]
+gcpbucketcreate() {
+    if [ -z "$1" ]; then
+        echo "Usage: gcpbucketcreate BUCKET_NAME [LOCATION]"
+        echo "Examples:"
+        echo "  gcpbucketcreate my-awesome-bucket"
+        echo "  gcpbucketcreate my-awesome-bucket europe-west1"
+        return 1
+    fi
+    
+    local bucket="$1"
+    local location=${2:-us-central1}
+    
+    # Add gs:// prefix if not already present
+    if [[ "$bucket" != gs://* ]]; then
+        bucket="gs://$bucket"
+    fi
+    
+    echo "Creating GCS bucket '$bucket' in location '$location'..."
+    if gcloud storage buckets create "$bucket" --location="$location"; then
+        echo "✅ Bucket created successfully!"
+    else
+        echo "❌ Failed to create bucket. Check the error message above."
+        return 1
+    fi
+}
+
+# Function: gcpbuckets
+# Purpose: Lists all Google Cloud Storage buckets in the current project
+#          with helpful formatting and project context.
+# Usage: gcpbuckets
+gcpbuckets() {
+    local project=$(gcloud config get-value project 2>/dev/null)
+    echo "Listing GCS buckets for project: $project"
+    
+    if gcloud storage buckets list; then
+        echo "✅ Bucket listing complete."
+    else
+        echo "❌ Failed to list buckets. Check your permissions and connection."
+        return 1
+    fi
+}
+
+# ============================================================ #
+# Terraform Utilities                                          #
+# ============================================================ #
+# Purpose: These functions provide convenient shortcuts for common Terraform
+#          operations, streamlining infrastructure-as-code workflows and
+#          reducing command complexity.
+#
+# Note: Requires Terraform CLI to be installed and available in your PATH.
+#       Install from: https://developer.hashicorp.com/terraform/downloads
+
+# Function: tfinit
+# Purpose: Initializes a Terraform project, downloading providers and modules.
+#          This is typically the first command you run in a new Terraform directory.
+# Usage: tfinit
+tfinit() {
+    echo "Initializing Terraform project..."
+    
+    # Check if terraform is installed
+    if ! command -v terraform >/dev/null 2>&1; then
+        echo "❌ Error: Terraform is not installed or not in your PATH."
+        echo "Please install Terraform: https://developer.hashicorp.com/terraform/downloads"
+        return 1
+    fi
+    
+    # Check if we're in a Terraform project (simplified version)
+    if [ ! -n "$(find . -maxdepth 1 -name '*.tf' -o -name '*.tf.json' 2>/dev/null)" ]; then
+        echo "⚠️ Warning: No Terraform configuration files (*.tf, *.tf.json) found in current directory."
+        echo "Continuing anyway, but you may need to create Terraform files first."
+    fi
+    
+    # Run terraform init
+    terraform init
+    
+    # Check result
+    if [ $? -eq 0 ]; then
+        echo "✅ Terraform initialization complete!"
+        echo "You can now run 'tfplan' to preview changes."
+    else
+        echo "❌ Terraform initialization failed."
+        return 1
+    fi
+}
+
+# Function: tfplan
+# Purpose: Creates an execution plan showing what actions Terraform will take.
+#          This is a safe, read-only operation for previewing changes.
+# Usage: tfplan
+tfplan() {
+    echo "Creating Terraform execution plan..."
+    
+    # Check if we're initialized
+    if [ ! -d ".terraform" ]; then
+        echo "⚠️ Project doesn't appear to be initialized. Running 'tfinit' first..."
+        tfinit || return 1
+    fi
+    
+    # Run terraform plan
+    terraform plan
+    
+    # Provide helpful feedback
+    if [ $? -eq 0 ]; then
+        echo "✅ Plan creation complete! If you're satisfied with the plan, run 'tfapply'."
+    else
+        echo "❌ Plan creation failed. Fix the errors above before proceeding."
+        return 1
+    fi
+}
+
+# Function: tfapply
+# Purpose: Applies the changes required to reach the desired state of the 
+#          infrastructure as defined in your Terraform configuration files.
+# Usage: tfapply
+tfapply() {
+    echo "Applying Terraform changes..."
+    echo "This will make actual changes to your infrastructure!"
+    
+    # Check if we're initialized
+    if [ ! -d ".terraform" ]; then
+        echo "⚠️ Project doesn't appear to be initialized. Running 'tfinit' first..."
+        tfinit || return 1
+    fi
+    
+    # Reminder about variable options
+    echo "---"
+    echo "TIP: You may want to add specific variables using -var flags:"
+    echo "Example: terraform apply -var='account=ACCOUNT' -var='project=PROJECT' \\"
+    echo "                        -var='region=REGION' -var='bucket=BUCKET'"
+    echo "---"
+    
+    # Confirmation prompt
+    read -p "Continue with apply? [y/N] " reply
+    if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+        echo "Operation canceled."
+        return 0
+    fi
+    
+    # Run terraform apply
+    terraform apply
+    
+    # Provide helpful feedback
+    if [ $? -eq 0 ]; then
+        echo "✅ Infrastructure changes applied successfully!"
+    else
+        echo "❌ Apply operation failed. Fix the errors above before trying again."
+        return 1
+    fi
+}
+
+# Function: tfrefresh
+# Purpose: Updates the local Terraform state file against actual resources.
+#          Useful when resources are modified outside of Terraform.
+# Usage: tfrefresh
+tfrefresh() {
+    echo "Refreshing Terraform state..."
+    
+    # Check if we're initialized
+    if [ ! -d ".terraform" ]; then
+        echo "⚠️ Project doesn't appear to be initialized. Running 'tfinit' first..."
+        tfinit || return 1
+    fi
+    
+    # Run terraform refresh
+    terraform refresh
+    
+    # Provide helpful feedback
+    if [ $? -eq 0 ]; then
+        echo "✅ State refresh complete!"
+    else
+        echo "❌ State refresh failed. Check the errors above."
+        return 1
+    fi
+}
+
+# Function: tfdestroy
+# Purpose: Destroys all Terraform-managed infrastructure, removing all resources.
+#          USE WITH CAUTION as this will delete actual infrastructure components.
+# Usage: tfdestroy
+tfdestroy() {
+    echo "🔥 WARNING: DESTROY OPERATION 🔥"
+    echo "This will PERMANENTLY DELETE all resources managed by Terraform in this project!"
+    echo "There is NO UNDO for this operation."
+    
+    # Check if we're initialized
+    if [ ! -d ".terraform" ]; then
+        echo "⚠️ Project doesn't appear to be initialized. Running 'tfinit' first..."
+        tfinit || return 1
+    fi
+    
+    # Double confirmation
+    echo "---"
+    read -p "Are you ABSOLUTELY SURE you want to destroy all resources? [y/N] " reply
+    if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+        echo "Destroy operation canceled."
+        return 0
+    fi
+    
+    # Second confirmation with project name typing
+    if [ -f "terraform.tfstate" ]; then
+        local project=$(grep -o '"project": "[^"]*' terraform.tfstate | head -1 | cut -d '"' -f 4)
+        if [ -n "$project" ]; then
+            echo "---"
+            echo "For final confirmation, please type the project ID: $project"
+            read -p "> " confirmation
+            if [ "$confirmation" != "$project" ]; then
+                echo "Project ID mismatch. Destroy operation canceled."
+                return 0
+            fi
+        fi
+    fi
+    
+    # Run terraform destroy
+    terraform destroy
+    
+    # Provide helpful feedback
+    if [ $? -eq 0 ]; then
+        echo "✅ Infrastructure successfully destroyed."
+    else
+        echo "❌ Destroy operation failed or was interrupted."
+        echo "Some resources may still exist. Check the errors above."
+        return 1
+    fi
+}
+
+# ============================================================ #
+# Finalization                                                 #
+# ============================================================ #
+# Clean up internal helper function to avoid polluting the global namespace
+unset -f _add_to_path_if_missing
+
+# ============================================================ #
+# Initialization Message                                       #
+# ============================================================ #
+echo "DevRS Shell Functions Loaded."

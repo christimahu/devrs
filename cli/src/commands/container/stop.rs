@@ -131,14 +131,14 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
                     Ok(name) // Return Ok with the name for success tracking.
                 }
                 // Check if the error indicates the container was not found.
-                Err(e) if e.downcast_ref::<crate::core::error::DevrsError>().map_or(false, |de| matches!(de, crate::core::error::DevrsError::ContainerNotFound { .. })) => {
+                Err(e) if e.downcast_ref::<crate::core::error::DevrsError>().is_some_and(|de| matches!(de, crate::core::error::DevrsError::ContainerNotFound { .. })) => {
                     // Container didn't exist. Log this, but consider it success for the 'stop' intent.
                     warn!("Container '{}' not found.", name);
                     Ok(name) // Return Ok, as the desired state (container stopped/absent) is achieved.
                 }
                  // Check if the error indicates the container was already stopped.
                  // This relies on the specific error message structure returned by our stop_container helper.
-                 Err(e) if e.downcast_ref::<crate::core::error::DevrsError>().map_or(false, |de| matches!(de, crate::core::error::DevrsError::DockerOperation(msg) if msg.contains("already stopped"))) => {
+                 Err(e) if e.downcast_ref::<crate::core::error::DevrsError>().is_some_and(|de| matches!(de, crate::core::error::DevrsError::DockerOperation(msg) if msg.contains("already stopped"))) => {
                     // Container was already stopped. Log this as info.
                     info!("Container '{}' was already stopped.", name);
                      Ok(name) // Return Ok, as the desired state is achieved.
@@ -202,7 +202,6 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
     }
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing for the `stop` command. Testing the handler logic
 // requires mocking the Docker API interaction within `docker::lifecycle::stop_container`.
@@ -214,7 +213,7 @@ mod tests {
     #[test]
     fn test_stop_args_parsing() {
         // Simulate `devrs container stop c1 c2 -t 5`
-        let args = StopArgs::try_parse_from(&[
+        let args = StopArgs::try_parse_from([
             "stop", // Command name context for clap.
             "c1",   // First positional argument (name/ID).
             "c2",   // Second positional argument.
@@ -231,19 +230,18 @@ mod tests {
     /// Test parsing with default timeout.
     #[test]
     fn test_stop_args_parsing_default_time() {
-         // Simulate `devrs container stop c1` (no time flag)
-         let args = StopArgs::try_parse_from(&[ "stop", "c1" ]).unwrap();
-         assert_eq!(args.container_names_or_ids, vec!["c1"]);
-         // Verify the default timeout value is used.
-         assert_eq!(args.time, 10);
+        // Simulate `devrs container stop c1` (no time flag)
+        let args = StopArgs::try_parse_from(["stop", "c1"]).unwrap();
+        assert_eq!(args.container_names_or_ids, vec!["c1"]);
+        // Verify the default timeout value is used.
+        assert_eq!(args.time, 10);
     }
-
 
     /// Test that the command fails parsing if no container names/IDs are provided.
     #[test]
     fn test_stop_args_requires_name() {
         // Simulate `devrs container stop` (with no names)
-        let result = StopArgs::try_parse_from(&["stop"]);
+        let result = StopArgs::try_parse_from(["stop"]);
         // Expect an error because at least one name/ID is required.
         assert!(result.is_err(), "Should fail without container names");
     }

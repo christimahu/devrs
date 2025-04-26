@@ -155,18 +155,17 @@ pub async fn handle_env(args: EnvArgs) -> Result<()> {
     match args.command {
         // Route execution based on the matched command.
         EnvCommand::Build(args) => build::handle_build(args).await?, // Call build handler.
-        EnvCommand::Exec(args) => exec::handle_exec(args).await?, // Call exec handler.
-        EnvCommand::Logs(args) => logs::handle_logs(args).await?, // Call logs handler.
+        EnvCommand::Exec(args) => exec::handle_exec(args).await?,    // Call exec handler.
+        EnvCommand::Logs(args) => logs::handle_logs(args).await?,    // Call logs handler.
         EnvCommand::Prune(args) => prune::handle_prune(args).await?, // Call prune handler.
         EnvCommand::Rebuild(args) => rebuild::handle_rebuild(args).await?, // Call rebuild handler.
         EnvCommand::Shell(args) => shell::handle_shell(args).await?, // Call shell handler.
         EnvCommand::Status(args) => status::handle_status(args).await?, // Call status handler.
-        EnvCommand::Stop(args) => stop::handle_stop(args).await?, // Call stop handler.
+        EnvCommand::Stop(args) => stop::handle_stop(args).await?,    // Call stop handler.
     }
     // If the matched handler completed successfully, return Ok.
     Ok(())
 }
-
 
 // --- Unit Tests ---
 // This test is a basic placeholder ensuring the module structure compiles.

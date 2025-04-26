@@ -43,7 +43,7 @@
 use crate::{
     common::docker::{self}, // Access shared Docker utilities (specifically lifecycle::stop_container).
     core::{
-        config, // Access configuration loading.
+        config,                      // Access configuration loading.
         error::{DevrsError, Result}, // Standard Result type and custom errors.
     },
 };
@@ -113,7 +113,8 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
     });
 
     // 3. Call the shared Docker utility function to stop the container.
-    println!( // Inform user which container is being targeted.
+    println!(
+        // Inform user which container is being targeted.
         "Attempting to stop core env container '{}'...",
         container_name
     );
@@ -121,7 +122,8 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
     let timeout = Some(args.time);
 
     // Attempt to stop the container.
-    match docker::lifecycle::stop_container(&container_name, timeout).await { //
+    match docker::lifecycle::stop_container(&container_name, timeout).await {
+        //
         // Stop command succeeded or container was already stopped (stop_container handles this).
         Ok(()) => {
             println!(
@@ -133,9 +135,9 @@ pub async fn handle_stop(args: StopArgs) -> Result<()> {
         // Handle specific errors gracefully.
         Err(e) => {
             // Check if the error was 'ContainerNotFound'.
-            if e.downcast_ref::<DevrsError>().map_or(false, |de| {
-                matches!(de, DevrsError::ContainerNotFound { .. })
-            }) {
+            if e.downcast_ref::<DevrsError>()
+                .is_some_and(|de| matches!(de, DevrsError::ContainerNotFound { .. }))
+            {
                 // If not found, log warning and inform user, but return Ok for the command itself.
                 warn!("Container '{}' not found, nothing to stop.", container_name);
                 println!("Container '{}' not found.", container_name);
@@ -159,7 +161,6 @@ fn get_core_env_container_name(cfg: &config::Config) -> String {
     format!("{}-instance", cfg.core_env.image_name)
 }
 
-
 // --- Unit Tests ---
 // Focus on argument parsing for the `stop` command. Testing the handler logic
 // requires mocking config loading and Docker API interactions.
@@ -171,13 +172,13 @@ mod tests {
     #[test]
     fn test_stop_args_parsing() {
         // Simulate `devrs env stop --name custom-env -t 5`
-        let args_named = StopArgs::try_parse_from(&["stop", "--name", "custom-env", "-t", "5"])
+        let args_named = StopArgs::try_parse_from(["stop", "--name", "custom-env", "-t", "5"])
             .expect("Parsing named args failed");
         assert_eq!(args_named.name, Some("custom-env".to_string())); // Check name.
         assert_eq!(args_named.time, 5); // Check custom timeout.
 
-         // Simulate `devrs env stop` (no optional args)
-        let args_default = StopArgs::try_parse_from(&["stop"]).expect("Parsing default args failed");
+        // Simulate `devrs env stop` (no optional args)
+        let args_default = StopArgs::try_parse_from(["stop"]).expect("Parsing default args failed");
         assert!(args_default.name.is_none()); // Name should be None.
         assert_eq!(args_default.time, 10); // Check default timeout.
     }
@@ -195,7 +196,10 @@ mod tests {
         // Mock config -> Ok(config_with_name)
         // Mock stop_container("derived-name", Some(10)) -> Ok(())
 
-        let args = StopArgs { name: None, time: 10 };
+        let args = StopArgs {
+            name: None,
+            time: 10,
+        };
         let result = handle_stop(args).await;
         assert!(result.is_ok());
         // Verify stop_container mock was called.
@@ -207,7 +211,10 @@ mod tests {
         // Mock config -> Ok(config_with_name)
         // Mock stop_container("derived-name", Some(10)) -> Err(anyhow!(DevrsError::ContainerNotFound { name: ... }))
 
-        let args = StopArgs { name: None, time: 10 };
+        let args = StopArgs {
+            name: None,
+            time: 10,
+        };
         let result = handle_stop(args).await;
         // Should still return Ok even if container not found.
         assert!(result.is_ok());

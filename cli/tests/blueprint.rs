@@ -56,7 +56,9 @@ fn test_blueprint_info_not_found() {
         .env("DEVRS_BLUEPRINTS_DIR", bp_dir_path)
         .assert()
         .failure() // Expect command to fail
-        .stderr(predicate::str::contains("Blueprint 'non-existent-bp' not found"));
+        .stderr(predicate::str::contains(
+            "Blueprint 'non-existent-bp' not found",
+        ));
 }
 
 /// # Test Blueprint Info Success (`test_blueprint_info_success`)
@@ -68,7 +70,7 @@ fn test_blueprint_info_not_found() {
 /// asserting success and the presence of expected output elements (title, description,
 /// file tree) in stdout. Marked active but will fail without setup.
 #[test]
-#[ignore] // TODO 
+#[ignore] // TODO
 fn test_blueprint_info_success() {
     // TODO: Setup a mock blueprint dir (e.g., with tempfile)
     // TODO: Point config to mock dir (via env var or test config file)

@@ -56,7 +56,7 @@ use crate::core::error::Result; // Use the standard Result type for error handli
 use anyhow::Context; // For adding contextual information to errors.
 use clap::Parser; // For parsing command-line arguments.
 use std::{
-    fs, // Standard filesystem operations (reading directories, files).
+    fs,                    // Standard filesystem operations (reading directories, files).
     path::{Path, PathBuf}, // Filesystem path manipulation types.
 };
 use tracing::{debug, info, warn}; // Logging framework utilities.
@@ -336,8 +336,7 @@ fn print_blueprint_table(blueprints: &[(String, String)], bp_dir: &Path) {
         .map(|(name, _)| name.len()) // Get length of each name.
         .max() // Find the maximum length.
         .unwrap_or(10) // Use 10 as a fallback width if list is empty (defensive).
-        .max(10) // Ensure a minimum width of 10 characters.
-        .min(30); // Cap the width at 30 characters to avoid overly wide tables.
+        .clamp(10, 30); // Ensure minimum 10, maximum 30.
 
     // --- Print Table Header ---
     println!("\nAvailable Blueprints in '{}':\n", bp_dir.display());
@@ -359,7 +358,6 @@ fn print_blueprint_table(blueprints: &[(String, String)], bp_dir: &Path) {
     // Suggest next commands for the user.
     println!("Use 'devrs blueprint info <Name>' for details or 'devrs blueprint create --lang <Name> ...' to use one.");
 }
-
 
 // --- Unit Tests ---
 // Unit tests remain unchanged as the code logic was not modified.
